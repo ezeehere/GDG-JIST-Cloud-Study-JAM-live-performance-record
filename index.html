@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JIST Participant Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+  <h1 class="text-3xl font-semibold mb-6 text-center text-gray-800">
+    GDG JIST on Campus Participant Dashboard
+  </h1>
+
+  <div id="summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 hidden">
+    <div class="bg-white shadow p-4 rounded-2xl text-center">
+      <p class="text-gray-600 font-medium">Total Participants</p>
+      <h2 id="totalParticipants" class="text-2xl font-semibold text-blue-600">0</h2>
+    </div>
+    <div class="bg-white shadow p-4 rounded-2xl text-center">
+      <p class="text-gray-600 font-medium">Redeemed Codes</p>
+      <h2 id="redeemedCount" class="text-2xl font-semibold text-green-600">0</h2>
+    </div>
+    <div class="bg-white shadow p-4 rounded-2xl text-center">
+      <p class="text-gray-600 font-medium">Eligible for Cloud Study Jam</p>
+      <h2 id="eligibleCount" class="text-2xl font-semibold text-emerald-600">0</h2>
+    </div>
+    <div class="bg-white shadow p-4 rounded-2xl text-center">
+      <p class="text-gray-600 font-medium">Ineligible</p>
+      <h2 id="ineligibleCount" class="text-2xl font-semibold text-red-600">0</h2>
+    </div>
+  </div>
+
+  <div id="leaderboardSection" class="hidden mb-10">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-5 text-center">🏆 Top 5 by Skill Badges Completed</h2>
+    <div id="leaderboardBody" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center"></div>
+  </div>
+
+  <div id="searchContainer" class="flex justify-center mb-4 hidden">
+    <input type="text" id="searchInput" placeholder="Search by name or email..."
+      class="w-full sm:w-1/2 border rounded-lg px-4 py-2 shadow-sm focus:ring-2 focus:ring-blue-400" />
+  </div>
+
+  <div class="overflow-x-auto">
+    <table id="dataTable" class="w-full bg-white rounded-2xl shadow hidden">
+      <thead class="bg-gray-200">
+        <tr class="text-gray-700 text-left">
+          <th class="py-3 px-4">User Name</th>
+          <th class="py-3 px-4">Email</th>
+          <th class="py-3 px-4">Access Code Status</th>
+          <th class="py-3 px-4">All Completed</th>
+          <th class="py-3 px-4 text-center">Action</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody" class="divide-y divide-gray-200"></tbody>
+    </table>
+  </div>
+
+  <div id="detailModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div class="bg-white rounded-2xl shadow-lg w-11/12 sm:w-2/3 lg:w-1/2 p-6 relative">
+      <button id="closeModal" class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
+      <h3 id="modalName" class="text-2xl font-semibold mb-1 text-gray-800"></h3>
+      <p id="modalEmail" class="text-gray-600 mb-3"></p>
+      <a id="modalProfile" href="#" target="_blank" class="text-blue-500 hover:underline text-sm mb-4 inline-block">View Google Cloud Skills Profile</a>
+      <div class="mb-4">
+        <h4 class="font-medium text-gray-700 mb-1">Skill Badges:</h4>
+        <ul id="badgeList" class="list-disc list-inside text-gray-600"></ul>
+      </div>
+      <div>
+        <h4 class="font-medium text-gray-700 mb-1">Arcade Games:</h4>
+        <ul id="gameList" class="list-disc list-inside text-gray-600"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tableBody = document.getElementById('tableBody');
+    const summaryDiv = document.getElementById('summary');
+    const leaderboardDiv = document.getElementById('leaderboardSection');
+    const leaderboardBody = document.getElementById('leaderboardBody');
+    const searchContainer = document.getElementById('searchContainer');
+    const dataTable = document.getElementById('dataTable');
+    const modal = document.getElementById('detailModal');
+    const closeModal = document.getElementById('closeModal');
+
+    let data = [];
+
+    // **MODIFICATION START: Load data from URL on page load**
+    document.addEventListener('DOMContentLoaded', () => {
+      const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQbtQn9ZK31tPZeJ09G9Tb0HulZ5St3E0VBHOqnZ2PmLSiUzeG9UcTdF--4C2px_UgivLOeaylMJnyq/pub?gid=0&single=true&output=csv';
+      
+      Papa.parse(csvUrl, {
+        download: true, // This is crucial for fetching the URL
+        header: true,
+        complete: (results) => {
+          data = results.data.filter(row => row['User Name']); // Filter out empty rows
+          displaySummary();
+          displayLeaderboard();
+          renderTable(data);
+          
+          // Show the hidden elements now that data is loaded
+          summaryDiv.classList.remove('hidden');
+          leaderboardDiv.classList.remove('hidden');
+          searchContainer.classList.remove('hidden');
+          dataTable.classList.remove('hidden');
+        }
+      });
+    });
+    // **MODIFICATION END**
+
+    function displaySummary() {
+      const total = data.length;
+      const redeemed = data.filter(d => (d['Access Code Redemption Status'] || '').trim().toLowerCase() === 'yes').length;
+      const eligible = redeemed;
+      const ineligible = data.filter(d => (d['Access Code Redemption Status'] || '').trim().toLowerCase() === 'no').length;
+
+      document.getElementById('totalParticipants').textContent = total;
+      document.getElementById('redeemedCount').textContent = redeemed;
+      document.getElementById('eligibleCount').textContent = eligible;
+      document.getElementById('ineligibleCount').textContent = ineligible;
+    }
+
+    function displayLeaderboard() {
+      leaderboardBody.innerHTML = '';
+      const sorted = [...data]
+        .filter(d => d['# of Skill Badges Completed'])
+        .sort((a, b) => parseInt(b['# of Skill Badges Completed']) - parseInt(a['# of Skill Badges Completed']))
+        .slice(0, 5);
+
+      sorted.forEach((row, i) => {
+        const colors = ["bg-yellow-100", "bg-gray-100", "bg-orange-100", "bg-blue-100", "bg-purple-100"];
+        const card = document.createElement('div');
+        card.className = `${colors[i]} p-5 rounded-2xl shadow hover:shadow-lg transition cursor-pointer w-full sm:w-80`;
+        card.innerHTML = `
+          <div class="flex items-center space-x-4">
+            <div class="text-3xl font-bold text-gray-700">#${i + 1}</div>
+            <div>
+              <p class="font-semibold text-gray-800">${row['User Name']}</p>
+              <p class="text-sm text-gray-600">${row['User Email']}</p>
+              <p class="text-blue-600 text-sm font-medium mt-1">Badges: ${row['# of Skill Badges Completed']}</p>
+            </div>
+          </div>`;
+        card.onclick = () => showDetails(row);
+        leaderboardBody.appendChild(card);
+      });
+    }
+
+    function renderTable(filteredData) {
+      tableBody.innerHTML = '';
+      filteredData.forEach(row => {
+        const access = (row['Access Code Redemption Status'] || '').trim().toLowerCase();
+        const bgColor = access === 'yes'
+          ? 'bg-green-100 hover:bg-green-200'
+          : access === 'no'
+          ? 'bg-red-100 hover:bg-red-200'
+          : 'bg-white hover:bg-gray-50';
+
+        const tr = document.createElement('tr');
+        tr.className = `${bgColor} transition`;
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-medium text-gray-800">${row['User Name']}</td>
+          <td class="py-3 px-4">${row['User Email']}</td>
+          <td class="py-3 px-4">${row['Access Code Redemption Status']}</td>
+          <td class="py-3 px-4">${row['All Skill Badges & Games Completed']}</td>
+          <td class="py-3 px-4 text-center">
+            <button class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
+              onclick='showDetails(${JSON.stringify(row)})'>View Details</button>
+          </td>`;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function showDetails(row) {
+      document.getElementById('modalName').textContent = row['User Name'] || '';
+      document.getElementById('modalEmail').textContent = row['User Email'] || '';
+      document.getElementById('modalProfile').href = row['Google Cloud Skills Boost Profile URL'] || '#';
+
+      const badges = (row['Names of Completed Skill Badges'] || '').split(',').filter(Boolean);
+      const games = (row['Names of Completed Arcade Games'] || '').split(',').filter(Boolean);
+
+      document.getElementById('badgeList').innerHTML = badges.map(b => `<li>${b.trim()}</li>`).join('') || '<li>No badges completed yet.</li>';
+      document.getElementById('gameList').innerHTML = games.map(g => `<li>${g.trim()}</li>`).join('') || '<li>No games completed yet.</li>';
+
+      modal.classList.remove('hidden');
+    }
+
+    closeModal.addEventListener('click', () => modal.classList.add('hidden'));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      const filtered = data.filter(row =>
+        row['User Name']?.toLowerCase().includes(term) ||
+        row['User Email']?.toLowerCase().includes(term)
+      );
+      renderTable(filtered);
+    });
+  </script>
+</body>
+</html>
