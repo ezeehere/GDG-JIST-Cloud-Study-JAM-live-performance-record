@@ -9,23 +9,23 @@
 </head>
 <body class="bg-gray-100 min-h-screen p-6">
   <h1 class="text-3xl font-semibold mb-6 text-center text-gray-800">
-    GDG JIST on Campus Participant Dashboard
+    JIST Participant Dashboard
   </h1>
 
   <div id="summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 hidden">
-    <div class="bg-white shadow p-4 rounded-2xl text-center">
+    <div id="card-total" class="bg-white shadow p-4 rounded-2xl text-center cursor-pointer hover:shadow-lg transition">
       <p class="text-gray-600 font-medium">Total Participants</p>
       <h2 id="totalParticipants" class="text-2xl font-semibold text-blue-600">0</h2>
     </div>
-    <div class="bg-white shadow p-4 rounded-2xl text-center">
+    <div id="card-redeemed" class="bg-white shadow p-4 rounded-2xl text-center cursor-pointer hover:shadow-lg transition">
       <p class="text-gray-600 font-medium">Redeemed Codes</p>
       <h2 id="redeemedCount" class="text-2xl font-semibold text-green-600">0</h2>
     </div>
-    <div class="bg-white shadow p-4 rounded-2xl text-center">
+    <div id="card-eligible" class="bg-white shadow p-4 rounded-2xl text-center cursor-pointer hover:shadow-lg transition">
       <p class="text-gray-600 font-medium">Eligible for Cloud Study Jam</p>
       <h2 id="eligibleCount" class="text-2xl font-semibold text-emerald-600">0</h2>
     </div>
-    <div class="bg-white shadow p-4 rounded-2xl text-center">
+    <div id="card-ineligible" class="bg-white shadow p-4 rounded-2xl text-center cursor-pointer hover:shadow-lg transition">
       <p class="text-gray-600 font-medium">Ineligible</p>
       <h2 id="ineligibleCount" class="text-2xl font-semibold text-red-600">0</h2>
     </div>
@@ -85,20 +85,18 @@
 
     let data = [];
 
-    // **MODIFICATION START: Load data from URL on page load**
     document.addEventListener('DOMContentLoaded', () => {
       const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQbtQn9ZK31tPZeJ09G9Tb0HulZ5St3E0VBHOqnZ2PmLSiUzeG9UcTdF--4C2px_UgivLOeaylMJnyq/pub?gid=0&single=true&output=csv';
       
       Papa.parse(csvUrl, {
-        download: true, // This is crucial for fetching the URL
+        download: true,
         header: true,
         complete: (results) => {
-          data = results.data.filter(row => row['User Name']); // Filter out empty rows
+          data = results.data.filter(row => row['User Name']);
           displaySummary();
           displayLeaderboard();
           renderTable(data);
           
-          // Show the hidden elements now that data is loaded
           summaryDiv.classList.remove('hidden');
           leaderboardDiv.classList.remove('hidden');
           searchContainer.classList.remove('hidden');
@@ -106,12 +104,32 @@
         }
       });
     });
-    // **MODIFICATION END**
+    
+    // --- MODIFICATION START: Add click listeners for filtering ---
+    document.getElementById('card-eligible').addEventListener('click', () => {
+      const eligibleData = data.filter(row => (row['Access Code Redemption Status'] || '').trim().toLowerCase() === 'yes');
+      renderTable(eligibleData);
+    });
+
+    document.getElementById('card-ineligible').addEventListener('click', () => {
+      const ineligibleData = data.filter(row => (row['Access Code Redemption Status'] || '').trim().toLowerCase() === 'no');
+      renderTable(ineligibleData);
+    });
+
+    // We make the 'Total' and 'Redeemed' cards reset the filter to show everyone
+    document.getElementById('card-total').addEventListener('click', () => {
+      renderTable(data);
+    });
+    document.getElementById('card-redeemed').addEventListener('click', () => {
+      renderTable(data);
+    });
+    // --- MODIFICATION END ---
+
 
     function displaySummary() {
       const total = data.length;
       const redeemed = data.filter(d => (d['Access Code Redemption Status'] || '').trim().toLowerCase() === 'yes').length;
-      const eligible = redeemed;
+      const eligible = redeemed; // Eligibility is based on redemption
       const ineligible = data.filter(d => (d['Access Code Redemption Status'] || '').trim().toLowerCase() === 'no').length;
 
       document.getElementById('totalParticipants').textContent = total;
