@@ -12,7 +12,7 @@
     GDG on Capmus JIST Participant Dashboard
   </h1>
 
-  <div id="summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 hidden">
+  <div id="summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8 hidden">
     <div id="card-total" class="bg-white shadow p-4 rounded-2xl text-center cursor-pointer hover:shadow-lg transition">
       <p class="text-gray-600 font-medium">Total Participants</p>
       <h2 id="totalParticipants" class="text-2xl font-semibold text-blue-600">0</h2>
@@ -29,6 +29,13 @@
       <p class="text-gray-600 font-medium">Ineligible (Click to see the list below)</p>
       <h2 id="ineligibleCount" class="text-2xl font-semibold text-red-600">0</h2>
     </div>
+
+    <!-- --- NEW CARD START --- -->
+    <div id="card-swags" class="bg-white shadow p-4 rounded-2xl text-center cursor-pointer hover:shadow-lg transition">
+      <p class="text-gray-600 font-medium">Eligible for Swags</p>
+      <h2 id="swagCount" class="text-2xl font-semibold text-indigo-600">0</h2>
+    </div>
+    <!-- --- NEW CARD END --- -->
   </div>
 
   <div id="leaderboardSection" class="hidden mb-10">
@@ -105,7 +112,6 @@
       });
     });
     
-    // --- MODIFICATION START: Add click listeners for filtering ---
     document.getElementById('card-eligible').addEventListener('click', () => {
       const eligibleData = data.filter(row => (row['Access Code Redemption Status'] || '').trim().toLowerCase() === 'yes');
       renderTable(eligibleData);
@@ -116,21 +122,27 @@
       renderTable(ineligibleData);
     });
 
-    // We make the 'Total' and 'Redeemed' cards reset the filter to show everyone
-    document.getElementById('card-total').addEventListener('click', () => {
-      renderTable(data);
-    });
-    document.getElementById('card-redeemed').addEventListener('click', () => {
-      renderTable(data);
-    });
-    // --- MODIFICATION END ---
+    document.getElementById('card-total').addEventListener('click', () => renderTable(data));
+    document.getElementById('card-redeemed').addEventListener('click', () => renderTable(data));
 
+    // --- NEW CARD: Filter by "All Completed = Yes"
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('#card-swags')) {
+        const swagData = data.filter(row => (row['All Skill Badges & Games Completed'] || '').trim().toLowerCase() === 'yes');
+        renderTable(swagData);
+      }
+    });
 
     function displaySummary() {
       const total = data.length;
       const redeemed = data.filter(d => (d['Access Code Redemption Status'] || '').trim().toLowerCase() === 'yes').length;
-      const eligible = redeemed; // Eligibility is based on redemption
+      const eligible = redeemed;
       const ineligible = data.filter(d => (d['Access Code Redemption Status'] || '').trim().toLowerCase() === 'no').length;
+
+      // --- NEW CARD LOGIC ---
+      const swagEligible = data.filter(d => (d['All Skill Badges & Games Completed'] || '').trim().toLowerCase() === 'yes').length;
+      document.getElementById('swagCount').textContent = swagEligible;
+      // -----------------------
 
       document.getElementById('totalParticipants').textContent = total;
       document.getElementById('redeemedCount').textContent = redeemed;
@@ -146,7 +158,7 @@
         .slice(0, 3);
 
       sorted.forEach((row, i) => {
-        const colors = ["bg-yellow-100", "bg-gray-100", "bg-orange-100", "bg-blue-100", "bg-purple-100"];
+        const colors = ["bg-yellow-100", "bg-gray-100", "bg-orange-100"];
         const card = document.createElement('div');
         card.className = `${colors[i]} p-5 rounded-2xl shadow hover:shadow-lg transition cursor-pointer w-full sm:w-80`;
         card.innerHTML = `
@@ -164,15 +176,8 @@
     }
 
 function renderTable(filteredData) {
-  // Sort by number of badges (highest first)
-  filteredData.sort((a, b) => {
-    const badgesA = parseInt(a['# of Skill Badges Completed']) || 0;
-    const badgesB = parseInt(b['# of Skill Badges Completed']) || 0;
-    return badgesB - badgesA;
-  });
-
+  filteredData.sort((a, b) => (parseInt(b['# of Skill Badges Completed']) || 0) - (parseInt(a['# of Skill Badges Completed']) || 0));
   tableBody.innerHTML = '';
-
   filteredData.forEach(row => {
     const access = (row['Access Code Redemption Status'] || '').trim().toLowerCase();
     const bgColor = access === 'yes'
@@ -181,18 +186,16 @@ function renderTable(filteredData) {
       ? 'bg-red-100 hover:bg-red-200'
       : 'bg-white hover:bg-gray-50';
 
-    const tr = document.createElement('tr');
-    tr.className = `${bgColor} transition`;
-
-    // Badge completion info
     const badgeCount = parseInt(row['# of Skill Badges Completed']) || 0;
-    const totalBadges = 20; // Adjust if you know your max
+    const totalBadges = 20;
     const percent = Math.min((badgeCount / totalBadges) * 100, 100);
 
     let barColor = 'bg-red-500';
     if (badgeCount >= 15) barColor = 'bg-green-500';
     else if (badgeCount >= 10) barColor = 'bg-orange-400';
 
+    const tr = document.createElement('tr');
+    tr.className = `${bgColor} transition`;
     tr.innerHTML = `
       <td class="py-3 px-4 font-medium text-gray-800">${row['User Name']}</td>
       <td class="py-3 px-4">${row['User Email']}</td>
@@ -216,7 +219,6 @@ function renderTable(filteredData) {
     tableBody.appendChild(tr);
   });
 }
-
 
     function showDetails(row) {
       document.getElementById('modalName').textContent = row['User Name'] || '';
@@ -246,27 +248,22 @@ function renderTable(filteredData) {
   </script>
 
   <!-- Countdown Timer -->
-
 <div id="countdownBox"
   class="fixed top-6 right-6 bg-white shadow-lg border border-gray-200 rounded-xl px-4 py-3 z-50 flex items-center gap-2">
   <span class="text-blue-600 font-semibold">⏳ Completion Deadline:</span>
   <span id="countdown" class="font-bold text-gray-800">--:--:--</span>
 </div>
 
-
 <script>
   function startCountdown() {
     const countdownEl = document.getElementById("countdown");
-    
-    // Set target deadline: 25th October 11:59 PM
     const end = new Date();
-    end.setFullYear(2025, 9, 25); // Month is 0-indexed (9 = October)
+    end.setFullYear(2025, 9, 25);
     end.setHours(23, 59, 59, 999);
 
     function updateCountdown() {
       const now = new Date();
       const diff = end - now;
-
       if (diff <= 0) {
         countdownEl.textContent = "Deadline reached!";
         countdownEl.classList.add("text-red-600");
@@ -281,22 +278,17 @@ function renderTable(filteredData) {
 
       let timeString = "";
       if (days > 0) timeString += `${days}d `;
-      timeString += `${hours.toString().padStart(2, '0')}h ` +
-                    `${minutes.toString().padStart(2, '0')}m ` +
-                    `${seconds.toString().padStart(2, '0')}s`;
+      timeString += `${hours.toString().padStart(2, '0')}h ${minutes
+        .toString()
+        .padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
 
       countdownEl.textContent = timeString;
-
-      // Add subtle red glow if less than 1 day left
-      if (diff < 86400000) {
-        countdownEl.classList.add("text-red-500", "animate-pulse");
-      }
+      if (diff < 86400000) countdownEl.classList.add("text-red-500", "animate-pulse");
     }
 
     updateCountdown();
     const timer = setInterval(updateCountdown, 1000);
   }
-
   startCountdown();
 </script>
 </body>
