@@ -10,7 +10,7 @@ A dynamic, client-side dashboard to track participant progress for the **GDG on 
 This project was built to gamify the event, provide real-time stats to organizers, and motivate participants by showing community progress towards swag tiers. It's built with pure HTML, Tailwind CSS, and JavaScript, and it fetches live data from a public Google Sheet, making it lightweight and easy to deploy.
 
 **Demo Screenshot:**
-[https://i.ibb.co/35z0bnpc/Untitled.png]
+![Dashboard Preview](https://github.com/user-attachments/assets/0dc68a8e-6e6b-4c07-b280-c144dbdca2d7)
 
 ## ✨ Features
 
@@ -36,8 +36,8 @@ This is a static website. You can run it by simply opening the `index.html` file
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
-    cd your-repo-name
+    git clone [https://github.com/ezeehere/GDG-JIST-Cloud-Study-JAM-live-performance-record.git](https://github.com/ezeehere/GDG-JIST-Cloud-Study-JAM-live-performance-record.git)
+    cd GDG-JIST-Cloud-Study-JAM-live-performance-record
     ```
 
 2.  **Publish Your Google Sheet to the Web:**
@@ -60,6 +60,7 @@ This is a static website. You can run it by simply opening the `index.html` file
 
 4.  **Run the Dashboard:**
     * Open the `index.html` file in your browser. The dashboard will now fetch and display the data from your sheet.
+  
 
 ## 📁 Data Structure
 
