@@ -161,9 +161,10 @@
             <th class="py-3 px-4 text-sm whitespace-nowrap">User Name</th>
             <th class="py-3 px-4 text-sm whitespace-nowrap">Email</th>
             <th class="py-3 px-4 text-sm whitespace-nowrap">Access Code Status</th>
+            <th class="py-3 px-4 text-sm whitespace-nowrap">Arcade Completion</th>
             <th class="py-3 px-4 text-sm whitespace-nowrap">All Completed</th>
             <th class="py-3 px-4 text-center text-sm whitespace-nowrap">Action</th>
-          </tr>
+            </tr>
         </thead>
         <tbody id="tableBody" class="divide-y divide-gray-200"></tbody>
       </table>
@@ -253,7 +254,7 @@
 
   <footer class="text-center p-6 bg-gray-100">
     <p class="text-sm text-gray-600">
-      Made with Morom ❤️ by Ezaz Ahmed (GDGoC Lead JIST)
+      Made by Ezaz Ahmed (GDGoC Lead JIST)
     </p>
   </footer>
 
@@ -456,7 +457,6 @@
       sorted.forEach((row, i) => {
         const colors = ["bg-yellow-100", "bg-gray-100", "bg-orange-100"];
         const card = document.createElement('div');
-        // ===== ADDED HOVER/ANIMATION CLASSES =====
         card.className = `w-full sm:w-80 p-5 rounded-2xl shadow hover:shadow-lg transition transform hover:scale-105 cursor-pointer ${colors[i]} animate-fadeInUp`;
         card.style.opacity = 0; // Start hidden for animation
         card.style.animationDelay = `${i * 150}ms`; // Stagger animation
@@ -478,7 +478,6 @@
       filteredData.sort((a, b) => (parseInt(b['# of Skill Badges Completed']) || 0) - (parseInt(a['# of Skill Badges Completed']) || 0));
       tableBody.innerHTML = '';
       
-      // ===== ADDED 'index' TO forEach FOR ANIMATION =====
       filteredData.forEach((row, index) => {
         const access = (row['Access Code Redemption Status'] || '').trim().toLowerCase();
         const bgColor = access === 'yes'
@@ -495,8 +494,12 @@
         if (badgeCount >= 15) barColor = 'bg-green-500';
         else if (badgeCount >= 10) barColor = 'bg-orange-400';
 
+        // ===== START OF JAVASCRIPT CHANGE =====
+        const arcadeGamesCompleted = parseInt(row['# of Arcade Games Completed']) || 0;
+        const arcadeStatus = arcadeGamesCompleted >= 1 ? 'Yes' : 'No';
+        // ===== END OF JAVASCRIPT CHANGE =====
+
         const tr = document.createElement('tr');
-        // ===== ADDED ANIMATION CLASSES/STYLE =====
         tr.className = `${bgColor} transition text-sm animate-fadeInUp`;
         tr.style.opacity = 0;
         tr.style.animationDelay = `${index * 20}ms`; // Stagger row animation
@@ -515,6 +518,9 @@
               </div>
             </div>
           </td>
+          
+          <td class="py-3 px-4 whitespace-nowrap">${arcadeStatus}</td>
+
           <td class="py-3 px-4 whitespace-nowrap">${row['All Skill Badges & Games Completed']}</td>
           <td class="py-3 px-4 text-center whitespace-nowrap">
             <button class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-xs"
@@ -534,11 +540,9 @@
       document.getElementById('badgeList').innerHTML = badges.map(b => `<li>${b.trim()}</li>`).join('') || '<li>No badges completed yet.</li>';
       document.getElementById('gameList').innerHTML = games.map(g => `<li>${g.trim()}</li>`).join('') || '<li>No games completed yet.</li>';
       
-      // ===== MODIFIED TO TOGGLE CLASS INSTEAD OF 'hidden' =====
       modal.classList.add('modal-open');
     }
 
-    // ===== MODIFIED TO TOGGLE CLASS INSTEAD OF 'hidden' =====
     closeModal.addEventListener('click', () => modal.classList.remove('modal-open'));
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('modal-open'); });
 
