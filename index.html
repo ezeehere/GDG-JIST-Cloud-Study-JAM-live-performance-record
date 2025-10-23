@@ -7,47 +7,69 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <style>
+    /* Makes the countdown box draggable */
     #countdownBox {
       cursor: move;
-      user-select: none; /* Prevents selecting text while dragging */
+      user-select: none;
+      /* Prevents selecting text while dragging */
     }
+
+    /* Animated gradient for progress bars */
     .progress-bar-animated {
       background-size: 200% 100%;
       animation: progress-animation 2s linear infinite;
     }
+
     @keyframes progress-animation {
-      0% { background-position: 100% 0; }
-      100% { background-position: -100% 0; }
-    }
-    .checkpoint::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 0;
-        width: 14px;
-        height: 14px;
-        border-radius: 9999px;
-        background-color: #e5e7eb; /* gray-200 */
-        border: 3px solid white;
-        transform: translate(-50%, -50%);
-        transition: background-color 0.5s, border-color 0.5s;
-        box-shadow: 0 0 5px rgba(0,0,0,0.1);
-        z-index: 3;
-    }
-    .checkpoint.checkpoint-active.text-green-600::before {
-        background-color: #10b981; /* green-500 */
-        border-color: #d1fae5; /* green-100 */
-    }
-    .checkpoint.checkpoint-active.text-blue-600::before {
-        background-color: #3b82f6; /* blue-500 */
-        border-color: #dbeafe; /* blue-100 */
-    }
-    .checkpoint.checkpoint-active.text-indigo-600::before {
-        background-color: #6366f1; /* indigo-500 */
-        border-color: #e0e7ff; /* indigo-100 */
+      0% {
+        background-position: 100% 0;
+      }
+      100% {
+        background-position: -100% 0;
+      }
     }
 
-    /* --- ANIMATION STYLES START --- */
+    /* --- Swag Progress Bar Checkpoint Styles --- */
+    .checkpoint::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 14px;
+      height: 14px;
+      border-radius: 9999px;
+      background-color: #e5e7eb;
+      /* gray-200 */
+      border: 3px solid white;
+      transform: translate(-50%, -50%);
+      transition: background-color 0.5s, border-color 0.5s;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+      z-index: 3;
+    }
+
+    .checkpoint.checkpoint-active.text-green-600::before {
+      background-color: #10b981;
+      /* green-500 */
+      border-color: #d1fae5;
+      /* green-100 */
+    }
+
+    .checkpoint.checkpoint-active.text-blue-600::before {
+      background-color: #3b82f6;
+      /* blue-500 */
+      border-color: #dbeafe;
+      /* blue-100 */
+    }
+
+    .checkpoint.checkpoint-active.text-indigo-600::before {
+      background-color: #6366f1;
+      /* indigo-500 */
+      border-color: #e0e7ff;
+      /* indigo-100 */
+    }
+    /* --- Checkpoint Styles End --- */
+
+    /* --- Animation Styles --- */
     @keyframes fadeInUp {
       from {
         opacity: 0;
@@ -58,34 +80,39 @@
         transform: translateY(0);
       }
     }
+
     .animate-fadeInUp {
-      /* We set opacity to 0 inline so it's hidden before JS adds the class */
+      /* Opacity 0 is set inline on elements so they are hidden before JS adds this class */
       animation: fadeInUp 0.5s ease-out forwards;
     }
-    
+
     /* Modal transition styles */
     #detailModal {
       transition: opacity 0.3s ease, transform 0.3s ease;
       opacity: 0;
       transform: scale(0.95);
-      pointer-events: none; /* Prevents clicking on invisible modal */
+      pointer-events: none;
+      /* Prevents clicking on invisible modal */
     }
+
     #detailModal.modal-open {
       opacity: 1;
       transform: scale(1);
-      pointer-events: auto; /* Allows interaction when open */
+      pointer-events: auto;
+      /* Allows interaction when open */
     }
-    /* --- ANIMATION STYLES END --- */
+    /* --- Animation Styles End --- */
   </style>
 </head>
+
 <body class="bg-gray-100 min-h-screen">
-  
+
   <div id="loaderOverlay" class="fixed inset-0 bg-gray-100 z-[999] flex flex-col justify-center items-center transition-all duration-1000 ease-in-out">
     <div class="text-center">
       <p id="loaderText" class="text-xl font-semibold text-gray-700 h-6 transition-opacity duration-300"></p>
     </div>
     <h1 id="welcomeMessage" class="text-2xl md:text-3xl font-semibold text-center text-gray-800 opacity-0 transition-all duration-500 scale-95 mt-6 px-4">
-      </h1>
+    </h1>
   </div>
 
   <nav class="bg-white shadow-md sticky top-0 z-40 opacity-0 transition-opacity duration-500">
@@ -116,8 +143,8 @@
       </div>
     </div>
   </nav>
+
   <main id="homeSection" class="p-4 md:p-6">
-  
     <h1 class="text-2xl md:text-3xl font-semibold mb-6 text-center text-gray-800">
       GDG on Campus JIST Participant Dashboard
     </h1>
@@ -164,12 +191,13 @@
             <th class="py-3 px-4 text-sm whitespace-nowrap">Arcade Completion</th>
             <th class="py-3 px-4 text-sm whitespace-nowrap">All Completed</th>
             <th class="py-3 px-4 text-center text-sm whitespace-nowrap">Action</th>
-            </tr>
+          </tr>
         </thead>
         <tbody id="tableBody" class="divide-y divide-gray-200"></tbody>
       </table>
     </div>
   </main>
+
   <main id="swagsSection" class="p-4 md:p-6 hidden">
     <h1 class="text-2xl md:text-3xl font-semibold mb-2 text-center text-gray-800">
       🏆 Cloud Study Jam Swags
@@ -181,32 +209,33 @@
         <h3 class="text-base sm:text-lg font-semibold text-gray-700">Community Progress</h3>
         <span id="progressCounter" class="text-lg sm:text-xl font-bold text-indigo-600">0 / 100</span>
       </div>
-       <div class="relative pt-8"> <div class="h-4 bg-gray-200 rounded-full relative">
-            <div id="progressBarFill" class="h-full bg-gradient-to-r from-cyan-400 to-blue-600 rounded-full progress-bar-animated transition-all duration-1000 ease-out" style="width: 0%;"></div>
-            <div id="checkpoint50" class="checkpoint absolute top-0 h-full" style="left: 50%;">
-                <span class="absolute -top-7 -translate-x-1/2 text-xs font-bold text-gray-500 transition-colors">Tier 3</span>
-            </div>
-            <div id="checkpoint70" class="checkpoint absolute top-0 h-full" style="left: 70%;">
-                <span class="absolute -top-7 -translate-x-1/2 text-xs font-bold text-gray-500 transition-colors">Tier 2</span>
-            </div>
-            <div id="checkpoint100" class="checkpoint absolute top-0 h-full" style="left: 100%;">
-                <span class="absolute -top-7 -translate-x-1/2 text-xs font-bold text-gray-500 transition-colors">Tier 1</span>
-            </div>
+      <div class="relative pt-8">
+        <div class="h-4 bg-gray-200 rounded-full relative">
+          <div id="progressBarFill" class="h-full bg-gradient-to-r from-cyan-400 to-blue-600 rounded-full progress-bar-animated transition-all duration-1000 ease-out" style="width: 0%;"></div>
+          <div id="checkpoint50" class="checkpoint absolute top-0 h-full" style="left: 50%;">
+            <span class="absolute -top-7 -translate-x-1/2 text-xs font-bold text-gray-500 transition-colors">Tier 3</span>
+          </div>
+          <div id="checkpoint70" class="checkpoint absolute top-0 h-full" style="left: 70%;">
+            <span class="absolute -top-7 -translate-x-1/2 text-xs font-bold text-gray-500 transition-colors">Tier 2</span>
+          </div>
+          <div id="checkpoint100" class="checkpoint absolute top-0 h-full" style="left: 100%;">
+            <span class="absolute -top-7 -translate-x-1/2 text-xs font-bold text-gray-500 transition-colors">Tier 1</span>
+          </div>
         </div>
       </div>
       <p id="encouragementMessage" class="text-center text-gray-600 mt-4 font-medium h-5 text-sm sm:text-base"></p>
     </div>
+
     <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
       <div class="bg-white rounded-2xl shadow-lg overflow-hidden transition transform hover:scale-105 hover:shadow-xl">
         <div class="p-6">
           <h3 class="text-2xl font-bold text-center text-indigo-600 mb-4">Tier 1</h3>
           <div class="bg-gray-100 rounded-lg flex items-center justify-center">
-             <img src="https://i.ibb.co/HLy7BRSF/Whats-App-Image-2025-10-22-at-21-30-45-ee7eeadb.jpg" alt="Tier 1 Swags" class="object-contain w-full h-full rounded-lg">
+            <img src="https://i.ibb.co/HLy7BRSF/Whats-App-Image-2025-10-22-at-21-30-45-ee7eeadb.jpg" alt="Tier 1 Swags" class="object-contain w-full h-full rounded-lg">
           </div>
           <p class="text-gray-600 text-center mt-4">Unlocked when <strong class="text-gray-800">100 participants</strong> complete the program.</p>
         </div>
       </div>
-
       <div class="bg-white rounded-2xl shadow-lg overflow-hidden transition transform hover:scale-105 hover:shadow-xl">
         <div class="p-6">
           <h3 class="text-2xl font-bold text-center text-blue-600 mb-4">Tier 2</h3>
@@ -216,7 +245,6 @@
           <p class="text-gray-600 text-center mt-4">Unlocked when <strong class="text-gray-800">70 participants</strong> complete the program.</p>
         </div>
       </div>
-
       <div class="bg-white rounded-2xl shadow-lg overflow-hidden transition transform hover:scale-105 hover:shadow-xl">
         <div class="p-6">
           <h3 class="text-2xl font-bold text-center text-green-600 mb-4">Tier 3</h3>
@@ -226,9 +254,9 @@
           <p class="text-gray-600 text-center mt-4">Unlocked when <strong class="text-gray-800">50 participants</strong> complete the program.</p>
         </div>
       </div>
-
     </div>
   </main>
+
   <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
     <div class="bg-white rounded-2xl shadow-lg w-full max-w-2xl p-6 relative max-h-full overflow-y-auto">
       <button id="closeModal" class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
@@ -259,7 +287,7 @@
   </footer>
 
   <script>
-    // --- ELEMENTS ---
+    // --- CACHED ELEMENTS ---
     const homeSection = document.getElementById('homeSection');
     const swagsSection = document.getElementById('swagsSection');
     const mobileMenuButton = document.getElementById('mobileMenuButton');
@@ -274,95 +302,100 @@
     const dataTable = document.getElementById('dataTable');
     const modal = document.getElementById('detailModal');
     const closeModal = document.getElementById('closeModal');
-    
-    // --- NEW LOADER ELEMENTS ---
     const loaderOverlay = document.getElementById('loaderOverlay');
     const loaderText = document.getElementById('loaderText');
     const welcomeMessage = document.getElementById('welcomeMessage');
     const nav = document.querySelector('nav');
-    
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQbtQn9ZK31tPZeJ09G9Tb0HulZ5St3E0VBHOqnZ2PmLSiUzeG9UcTdF--4C2px_UgivLOeaylMJnyq/pub?gid=0&single=true&output=csv';
 
-    let data = [];
+    // --- CONFIGURATION ---
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQbtQn9ZK31tPZeJ09G9Tb0HulZ5St3E0VBHOqnZ2PmLSiUzeG9UcTdF--4C2px_UgivLOeaylMJnyq/pub?gid=0&single=true&output=csv';
+    let data = []; // Global store for participant data
 
     // Helper function for delays
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-    // --- NEW LOADER & PARSE FUNCTION ---
+    // --- INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => {
+      runLoaderAndParse(); // Start the loader and data fetching
+      startCountdown(); // Start the countdown timer
+      makeDraggable(document.getElementById('countdownBox')); // Make timer draggable
+    });
+
+    /**
+     * Controls the initial loading sequence, fetches data, and triggers
+     * the rendering and animation of the dashboard.
+     */
     async function runLoaderAndParse() {
+      // 1. Simulate a loading process with text updates
       const texts = [
-        "Fetching results from the server...", 
-        "Verifying with the Organizer...", 
+        "Fetching results from the server...",
+        "Verifying with the Organizer...",
         "Preparing the dashboard..."
       ];
-      
-      await sleep(500); // Small delay to start
-
+      await sleep(500);
       for (const text of texts) {
         loaderText.textContent = text;
-        await sleep(1500); // Show each message
+        await sleep(1500);
       }
+      loaderText.style.display = 'none';
 
-      loaderText.style.display = 'none'; // Hide loading text
-      
-      // Show Welcome message
+      // 2. Show Welcome message
       welcomeMessage.textContent = 'Welcome to GDG JIST Cloud Study JAM Dashboard';
       welcomeMessage.classList.remove('opacity-0', 'scale-95');
-      
-      await sleep(2000); // Let user read welcome message
+      await sleep(2000);
 
-      // Animate loader away and fade in nav
+      // 3. Fade out loader and fade in nav bar
       loaderOverlay.classList.add('opacity-0', '-translate-y-full');
       nav.classList.remove('opacity-0');
-      
-      await sleep(1000); // Wait for transition to finish
-      loaderOverlay.style.display = 'none'; // Remove loader from view
+      await sleep(1000);
+      loaderOverlay.style.display = 'none';
 
-      // Now, parse the data
+      // 4. Fetch and parse CSV data from Google Sheets
       Papa.parse(csvUrl, {
         download: true,
         header: true,
         complete: (results) => {
-          data = results.data.filter(row => row['User Name']);
+          data = results.data.filter(row => row['User Name']); // Filter out empty rows
+
+          // 5. Render all data components
           displaySummary();
           updateSwagProgressBar();
           displayLeaderboard();
           renderTable(data);
-          
-          // --- ANIMATION LOGIC START ---
-          
-          // Animate summary cards
-          summaryDiv.classList.remove('hidden');
-          Array.from(summaryDiv.children).forEach((card, index) => {
-            card.classList.add('animate-fadeInUp');
-            card.style.animationDelay = `${index * 100}ms`;
-          });
 
-          // Animate leaderboard (delay is handled in its function)
-          leaderboardDiv.classList.remove('hidden');
-
-          // Animate search bar
-          searchContainer.classList.remove('hidden');
-          searchContainer.classList.add('animate-fadeInUp');
-          searchContainer.style.animationDelay = '500ms'; // After cards
-
-          // Show table (rows are animated in their function)
-          dataTable.classList.remove('hidden');
-          // --- ANIMATION LOGIC END ---
+          // 6. Animate content in after data is loaded
+          animateContentIn();
         }
       });
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // Start the new loader sequence
-      runLoaderAndParse();
-      
-      // Start other independent functions
-      startCountdown();
-      makeDraggable(document.getElementById('countdownBox'));
-    });
-    
+    /**
+     * Triggers the 'fadeInUp' animations on dashboard elements in a staggered sequence.
+     */
+    function animateContentIn() {
+      // Animate summary cards
+      summaryDiv.classList.remove('hidden');
+      Array.from(summaryDiv.children).forEach((card, index) => {
+        card.classList.add('animate-fadeInUp');
+        card.style.animationDelay = `${index * 100}ms`;
+      });
+
+      // Animate leaderboard (its cards animate in its own function)
+      leaderboardDiv.classList.remove('hidden');
+
+      // Animate search bar
+      searchContainer.classList.remove('hidden');
+      searchContainer.classList.add('animate-fadeInUp');
+      searchContainer.style.animationDelay = '500ms'; // After cards
+
+      // Show table (rows are animated in renderTable)
+      dataTable.classList.remove('hidden');
+    }
+
     // --- EVENT LISTENERS ---
+    document.getElementById('card-total').addEventListener('click', () => renderTable(data));
+    document.getElementById('card-redeemed').addEventListener('click', () => renderTable(data));
+
     document.getElementById('card-eligible').addEventListener('click', () => {
       const eligibleData = data.filter(row => (row['Access Code Redemption Status'] || '').trim().toLowerCase() === 'yes');
       renderTable(eligibleData);
@@ -373,80 +406,119 @@
       renderTable(ineligibleData);
     });
 
-    document.getElementById('card-total').addEventListener('click', () => renderTable(data));
-    document.getElementById('card-redeemed').addEventListener('click', () => renderTable(data));
-
-    document.addEventListener('click', (e) => {
-      if (e.target.closest('#card-swags')) {
-        const swagData = data.filter(row => (row['All Skill Badges & Games Completed'] || '').trim().toLowerCase() === 'yes');
-        renderTable(swagData);
-      }
+    document.getElementById('card-swags').addEventListener('click', () => {
+      const swagData = data.filter(row => (row['All Skill Badges & Games Completed'] || '').trim().toLowerCase() === 'yes');
+      renderTable(swagData);
     });
-    
-    // --- MODIFIED PROGRESS BAR FUNCTION ---
-    function updateSwagProgressBar() {
-        const swagEligible = data.filter(d => (d['All Skill Badges & Games Completed'] || '').trim().toLowerCase() === 'yes').length;
-        const maxGoal = 100;
-        const percentage = Math.min((swagEligible / maxGoal) * 100, 100);
 
-        document.getElementById('progressBarFill').style.width = `${percentage}%`;
-        document.getElementById('progressCounter').textContent = `${swagEligible} / ${maxGoal}`;
-        
-        const encouragementEl = document.getElementById('encouragementMessage');
-        let message = '';
-        if (swagEligible < 50) {
-            message = `Let's push to unlock <strong class="text-green-600">Tier 3</strong>! We need <strong class="text-gray-800">${50 - swagEligible}</strong> more completions.`;
-        } else if (swagEligible < 70) {
-            message = `Great job unlocking Tier 3! Now for <strong class="text-blue-600">Tier 2</strong>. Only <strong class="text-gray-800">${70 - swagEligible}</strong> to go!`;
-        } else if (swagEligible < 100) {
-            message = `Tier 2 is unlocked! The final push for <strong class="text-indigo-600">Tier 1</strong>! <strong class="text-gray-800">${100 - swagEligible}</strong> more needed!`;
-        } else {
-            message = `🎉 <strong class="text-indigo-600">Congratulations!</strong> All tiers have been unlocked! 🎉`;
-        }
-        encouragementEl.innerHTML = message;
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      const filtered = data.filter(row =>
+        row['User Name']?.toLowerCase().includes(term) ||
+        row['User Email']?.toLowerCase().includes(term)
+      );
+      renderTable(filtered);
+    });
 
-        const checkpoint50 = document.getElementById('checkpoint50');
-        const checkpoint70 = document.getElementById('checkpoint70');
-        const checkpoint100 = document.getElementById('checkpoint100');
-        
-        const label50 = checkpoint50.querySelector('span');
-        const label70 = checkpoint70.querySelector('span');
-        const label100 = checkpoint100.querySelector('span');
+    // Modal close events
+    closeModal.addEventListener('click', () => modal.classList.remove('modal-open'));
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.remove('modal-open');
+    });
 
-        const reached50 = swagEligible >= 50;
-        checkpoint50.classList.toggle('checkpoint-active', reached50);
-        checkpoint50.classList.toggle('text-green-600', reached50);
-        label50.classList.toggle('text-green-600', reached50);
-        label50.classList.toggle('text-gray-500', !reached50);
+    // Navigation events
+    mobileMenuButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+    document.getElementById('navHome').addEventListener('click', (e) => {
+      e.preventDefault();
+      setActiveLink('navHome');
+    });
+    document.getElementById('navSwags').addEventListener('click', (e) => {
+      e.preventDefault();
+      setActiveLink('navSwags');
+    });
+    document.getElementById('navHomeMobile').addEventListener('click', (e) => {
+      e.preventDefault();
+      setActiveLink('navHome');
+    });
+    document.getElementById('navSwagsMobile').addEventListener('click', (e) => {
+      e.preventDefault();
+      setActiveLink('navSwags');
+    });
 
-        const reached70 = swagEligible >= 70;
-        checkpoint70.classList.toggle('checkpoint-active', reached70);
-        checkpoint70.classList.toggle('text-blue-600', reached70);
-        label70.classList.toggle('text-blue-600', reached70);
-        label70.classList.toggle('text-gray-500', !reached70);
-
-        const reached100 = swagEligible >= 100;
-        checkpoint100.classList.toggle('checkpoint-active', reached100);
-        checkpoint100.classList.toggle('text-indigo-600', reached100);
-        label100.classList.toggle('text-indigo-600', reached100);
-        label100.classList.toggle('text-gray-500', !reached100);
-    }
 
     // --- DATA DISPLAY FUNCTIONS ---
+
+    /**
+     * Updates the summary cards with counts from the data.
+     */
     function displaySummary() {
       const total = data.length;
       const redeemed = data.filter(d => (d['Access Code Redemption Status'] || '').trim().toLowerCase() === 'yes').length;
-      const eligible = redeemed;
       const ineligible = data.filter(d => (d['Access Code Redemption Status'] || '').trim().toLowerCase() === 'no').length;
       const swagEligible = data.filter(d => (d['All Skill Badges & Games Completed'] || '').trim().toLowerCase() === 'yes').length;
-      
-      document.getElementById('swagCount').textContent = swagEligible;
+
       document.getElementById('totalParticipants').textContent = total;
       document.getElementById('redeemedCount').textContent = redeemed;
-      document.getElementById('eligibleCount').textContent = eligible;
+      document.getElementById('eligibleCount').textContent = redeemed; // Eligible = Redeemed
       document.getElementById('ineligibleCount').textContent = ineligible;
+      document.getElementById('swagCount').textContent = swagEligible;
     }
 
+    /**
+     * Updates the community swag progress bar, checkpoints, and encouragement message.
+     */
+    function updateSwagProgressBar() {
+      const swagEligible = data.filter(d => (d['All Skill Badges & Games Completed'] || '').trim().toLowerCase() === 'yes').length;
+      const maxGoal = 100;
+      const percentage = Math.min((swagEligible / maxGoal) * 100, 100);
+
+      document.getElementById('progressBarFill').style.width = `${percentage}%`;
+      document.getElementById('progressCounter').textContent = `${swagEligible} / ${maxGoal}`;
+
+      // Update encouragement message
+      const encouragementEl = document.getElementById('encouragementMessage');
+      let message = '';
+      if (swagEligible < 50) {
+        message = `Let's push to unlock <strong class="text-green-600">Tier 3</strong>! We need <strong class="text-gray-800">${50 - swagEligible}</strong> more completions.`;
+      } else if (swagEligible < 70) {
+        message = `Great job unlocking Tier 3! Now for <strong class="text-blue-600">Tier 2</strong>. Only <strong class="text-gray-800">${70 - swagEligible}</strong> to go!`;
+      } else if (swagEligible < 100) {
+        message = `Tier 2 is unlocked! The final push for <strong class="text-indigo-600">Tier 1</strong>! <strong class="text-gray-800">${100 - swagEligible}</strong> more needed!`;
+      } else {
+        message = `🎉 <strong class="text-indigo-600">Congratulations!</strong> All tiers have been unlocked! 🎉`;
+      }
+      encouragementEl.innerHTML = message;
+
+      // Update checkpoints
+      const checkpoint50 = document.getElementById('checkpoint50');
+      const checkpoint70 = document.getElementById('checkpoint70');
+      const checkpoint100 = document.getElementById('checkpoint100');
+      const label50 = checkpoint50.querySelector('span');
+      const label70 = checkpoint70.querySelector('span');
+      const label100 = checkpoint100.querySelector('span');
+
+      const reached50 = swagEligible >= 50;
+      checkpoint50.classList.toggle('checkpoint-active', reached50);
+      checkpoint50.classList.toggle('text-green-600', reached50);
+      label50.classList.toggle('text-green-600', reached50);
+      label50.classList.toggle('text-gray-500', !reached50);
+
+      const reached70 = swagEligible >= 70;
+      checkpoint70.classList.toggle('checkpoint-active', reached70);
+      checkpoint70.classList.toggle('text-blue-600', reached70);
+      label70.classList.toggle('text-blue-600', reached70);
+      label70.classList.toggle('text-gray-500', !reached70);
+
+      const reached100 = swagEligible >= 100;
+      checkpoint100.classList.toggle('checkpoint-active', reached100);
+      checkpoint100.classList.toggle('text-indigo-600', reached100);
+      label100.classList.toggle('text-indigo-600', reached100);
+      label100.classList.toggle('text-gray-500', !reached100);
+    }
+
+    /**
+     * Renders the Top 3 leaderboard cards.
+     */
     function displayLeaderboard() {
       leaderboardBody.innerHTML = '';
       const sorted = [...data]
@@ -469,41 +541,46 @@
               <p class="text-blue-600 text-sm font-medium mt-1">Badges: ${row['# of Skill Badges Completed']}</p>
             </div>
           </div>`;
-        card.onclick = () => showDetails(row);
+        card.onclick = () => showDetails(row); // Safe to add listener directly here
         leaderboardBody.appendChild(card);
       });
     }
 
+    /**
+     * Renders the main participant table with filtered data.
+     * @param {Array} filteredData - The array of participant objects to display.
+     */
     function renderTable(filteredData) {
+      // Sort by badge count descending
       filteredData.sort((a, b) => (parseInt(b['# of Skill Badges Completed']) || 0) - (parseInt(a['# of Skill Badges Completed']) || 0));
       tableBody.innerHTML = '';
-      
+
       filteredData.forEach((row, index) => {
         const access = (row['Access Code Redemption Status'] || '').trim().toLowerCase();
-        const bgColor = access === 'yes'
-          ? 'bg-green-100 hover:bg-green-200'
-          : access === 'no'
-          ? 'bg-red-100 hover:bg-red-200'
-          : 'bg-white hover:bg-gray-50';
+        const bgColor = access === 'yes' ?
+          'bg-green-100 hover:bg-green-200' :
+          access === 'no' ?
+          'bg-red-100 hover:bg-red-200' :
+          'bg-white hover:bg-gray-50';
 
+        // Progress bar logic
         const badgeCount = parseInt(row['# of Skill Badges Completed']) || 0;
         const totalBadges = 20;
         const percent = Math.min((badgeCount / totalBadges) * 100, 100);
-
         let barColor = 'bg-red-500';
         if (badgeCount >= 15) barColor = 'bg-green-500';
         else if (badgeCount >= 10) barColor = 'bg-orange-400';
 
-        // ===== START OF JAVASCRIPT CHANGE =====
+        // Arcade game status
         const arcadeGamesCompleted = parseInt(row['# of Arcade Games Completed']) || 0;
         const arcadeStatus = arcadeGamesCompleted >= 1 ? 'Yes' : 'No';
-        // ===== END OF JAVASCRIPT CHANGE =====
 
         const tr = document.createElement('tr');
         tr.className = `${bgColor} transition text-sm animate-fadeInUp`;
         tr.style.opacity = 0;
         tr.style.animationDelay = `${index * 20}ms`; // Stagger row animation
-        
+
+        // Set inner HTML for all cells *except* the button cell
         tr.innerHTML = `
           <td class="py-3 px-4 font-medium text-gray-800 whitespace-nowrap">${row['User Name']}</td>
           <td class="py-3 px-4 whitespace-nowrap">${row['User Email']}</td>
@@ -518,49 +595,66 @@
               </div>
             </div>
           </td>
-          
           <td class="py-3 px-4 whitespace-nowrap">${arcadeStatus}</td>
-
           <td class="py-3 px-4 whitespace-nowrap">${row['All Skill Badges & Games Completed']}</td>
-          <td class="py-3 px-4 text-center whitespace-nowrap">
-            <button class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-xs"
-              onclick='showDetails(${JSON.stringify(row)})'>View Details</button>
-          </td>
         `;
+
+        // Create the button cell separately to safely add the event listener
+        const actionCell = document.createElement('td');
+        actionCell.className = "py-3 px-4 text-center whitespace-nowrap";
+
+        const viewButton = document.createElement('button');
+        viewButton.className = "bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-xs";
+        viewButton.textContent = "View Details";
+
+        // Add listener safely (avoids issues with JSON.stringify in HTML)
+        viewButton.addEventListener('click', () => showDetails(row));
+
+        actionCell.appendChild(viewButton);
+        tr.appendChild(actionCell);
+
         tableBody.appendChild(tr);
       });
     }
 
+    /**
+     * Populates and shows the modal with a specific participant's details.
+     * @param {object} row - The participant data object.
+     */
     function showDetails(row) {
       document.getElementById('modalName').textContent = row['User Name'] || '';
       document.getElementById('modalEmail').textContent = row['User Email'] || '';
       document.getElementById('modalProfile').href = row['Google Cloud Skills Boost Profile URL'] || '#';
+
       const badges = (row['Names of Completed Skill Badges'] || '').split(',').filter(Boolean);
       const games = (row['Names of Completed Arcade Games'] || '').split(',').filter(Boolean);
-      document.getElementById('badgeList').innerHTML = badges.map(b => `<li>${b.trim()}</li>`).join('') || '<li>No badges completed yet.</li>';
-      document.getElementById('gameList').innerHTML = games.map(g => `<li>${g.trim()}</li>`).join('') || '<li>No games completed yet.</li>';
-      
+
+      document.getElementById('badgeList').innerHTML = badges.length > 0 ?
+        badges.map(b => `<li>${b.trim()}</li>`).join('') :
+        '<li>No badges completed yet.</li>';
+
+      document.getElementById('gameList').innerHTML = games.length > 0 ?
+        games.map(g => `<li>${g.trim()}</li>`).join('') :
+        '<li>No games completed yet.</li>';
+
       modal.classList.add('modal-open');
     }
 
-    closeModal.addEventListener('click', () => modal.classList.remove('modal-open'));
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('modal-open'); });
 
     // --- UTILITY FUNCTIONS ---
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-      const term = e.target.value.toLowerCase();
-      const filtered = data.filter(row =>
-        row['User Name']?.toLowerCase().includes(term) ||
-        row['User Email']?.toLowerCase().includes(term)
-      );
-      renderTable(filtered);
-    });
 
+    /**
+     * Handles tabbed navigation between Home and Swags sections.
+     * @param {string} activeId - The ID of the nav link to activate.
+     */
     function setActiveLink(activeId) {
+      // Toggle main sections
       homeSection.classList.toggle('hidden', activeId !== 'navHome');
       swagsSection.classList.toggle('hidden', activeId !== 'navSwags');
+
+      // Update desktop nav link styles
       navLinks.forEach(link => {
-        if (link.id.includes('Syllabus')) return;
+        if (link.id.includes('Syllabus')) return; // Ignore external links
         if (link.id === activeId) {
           link.classList.add('text-blue-600', 'font-semibold');
           link.classList.remove('text-gray-700', 'font-medium', 'hover:text-blue-600', 'hover:bg-gray-100');
@@ -569,6 +663,8 @@
           link.classList.add('text-gray-700', 'font-medium', 'hover:text-blue-600', 'hover:bg-gray-100');
         }
       });
+
+      // Update mobile nav link styles
       navLinksMobile.forEach(link => {
         if (link.id.includes('Syllabus')) return;
         if (link.id === `${activeId}Mobile`) {
@@ -579,71 +675,97 @@
           link.classList.add('text-gray-700', 'font-medium', 'hover:text-blue-600', 'hover:bg-gray-100');
         }
       });
+
+      // Close mobile menu on selection
       mobileMenu.classList.add('hidden');
     }
 
-    document.getElementById('navHome').addEventListener('click', (e) => { e.preventDefault(); setActiveLink('navHome'); });
-    document.getElementById('navSwags').addEventListener('click', (e) => { e.preventDefault(); setActiveLink('navSwags'); });
-    document.getElementById('navHomeMobile').addEventListener('click', (e) => { e.preventDefault(); setActiveLink('navHome'); });
-    document.getElementById('navSwagsMobile').addEventListener('click', (e) => { e.preventDefault(); setActiveLink('navSwags'); });
-
-    mobileMenuButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
-
+    /**
+     * Initializes and updates the countdown timer every second.
+     */
     function startCountdown() {
       const countdownEl = document.getElementById("countdown");
-      const end = new Date();
-      end.setFullYear(2025, 9, 30); // Note: 9 is October
-      end.setHours(23, 59, 59, 999);
+      // --- CONFIG: Set your deadline here (Year, MonthIndex, Day) ---
+      const end = new Date(2025, 9, 30, 23, 59, 59); // 2025-10-30 @ 23:59:59 (Month is 0-indexed)
+
       let timer;
+
       function updateCountdown() {
         const now = new Date();
         const diff = end - now;
+
         if (diff <= 0) {
           countdownEl.textContent = "Deadline reached!";
           countdownEl.classList.add("text-red-600");
           if (timer) clearInterval(timer);
           return;
         }
+
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
         let timeString = "";
         if (days > 0) timeString += `${days}d `;
         timeString += `${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+
         countdownEl.textContent = timeString;
-        if (diff < 86400000) countdownEl.classList.add("text-red-500", "animate-pulse");
+
+        // Add pulse animation if less than 1 day left
+        if (diff < 86400000) {
+          countdownEl.classList.add("text-red-500", "animate-pulse");
+        }
       }
+
       updateCountdown();
       timer = setInterval(updateCountdown, 1000);
     }
 
+    /**
+     * Enables mouse and touch dragging for a given HTML element.
+     * @param {HTMLElement} element - The element to make draggable.
+     */
     function makeDraggable(element) {
-      let isDragging = false, offsetX, offsetY;
+      let isDragging = false,
+        offsetX, offsetY;
+
+      // Mouse Events
       element.addEventListener('mousedown', (e) => {
         isDragging = true;
         offsetX = e.clientX - element.getBoundingClientRect().left;
         offsetY = e.clientY - element.getBoundingClientRect().top;
         e.preventDefault();
       });
+
       document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
         let newX = e.clientX - offsetX;
         let newY = e.clientY - offsetY;
+        // Constrain to viewport
         newX = Math.max(0, Math.min(newX, window.innerWidth - element.offsetWidth));
         newY = Math.max(0, Math.min(newY, window.innerHeight - element.offsetHeight));
         element.style.left = `${newX}px`;
         element.style.top = `${newY}px`;
-        element.classList.remove('top-24', 'right-6', 'top-20', 'right-4'); 
+        // Remove initial positioning classes
+        element.classList.remove('top-24', 'right-6', 'top-20', 'right-4');
       });
-      document.addEventListener('mouseup', () => { isDragging = false; });
+
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+
+      // Touch Events
       element.addEventListener('touchstart', (e) => {
         isDragging = true;
         const touch = e.touches[0];
         offsetX = touch.clientX - element.getBoundingClientRect().left;
         offsetY = touch.clientY - element.getBoundingClientRect().top;
         e.preventDefault();
-      }, { passive: false });
+      }, {
+        passive: false
+      });
+
       document.addEventListener('touchmove', (e) => {
         if (!isDragging) return;
         const touch = e.touches[0];
@@ -655,6 +777,7 @@
         element.style.top = `${newY}px`;
         element.classList.remove('top-24', 'right-6', 'top-20', 'right-4');
       });
+
       document.addEventListener('touchend', () => {
         isDragging = false;
       });
