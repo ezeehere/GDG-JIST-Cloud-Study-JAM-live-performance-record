@@ -6,61 +6,233 @@
   <title>JIST Participant Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    #countdownBox {
+      cursor: move;
+      user-select: none; /* Prevents selecting text while dragging */
+    }
+    .progress-bar-animated {
+      background-size: 200% 100%;
+      animation: progress-animation 2s linear infinite;
+    }
+    @keyframes progress-animation {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+    .checkpoint::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 14px;
+        height: 14px;
+        border-radius: 9999px;
+        background-color: #e5e7eb; /* gray-200 */
+        border: 3px solid white;
+        transform: translate(-50%, -50%);
+        transition: background-color 0.5s, border-color 0.5s;
+        box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        z-index: 3;
+    }
+    .checkpoint.checkpoint-active.text-green-600::before {
+        background-color: #10b981; /* green-500 */
+        border-color: #d1fae5; /* green-100 */
+    }
+    .checkpoint.checkpoint-active.text-blue-600::before {
+        background-color: #3b82f6; /* blue-500 */
+        border-color: #dbeafe; /* blue-100 */
+    }
+    .checkpoint.checkpoint-active.text-indigo-600::before {
+        background-color: #6366f1; /* indigo-500 */
+        border-color: #e0e7ff; /* indigo-100 */
+    }
+
+    /* --- ANIMATION STYLES START --- */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-fadeInUp {
+      /* We set opacity to 0 inline so it's hidden before JS adds the class */
+      animation: fadeInUp 0.5s ease-out forwards;
+    }
+    
+    /* Modal transition styles */
+    #detailModal {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      opacity: 0;
+      transform: scale(0.95);
+      pointer-events: none; /* Prevents clicking on invisible modal */
+    }
+    #detailModal.modal-open {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto; /* Allows interaction when open */
+    }
+    /* --- ANIMATION STYLES END --- */
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-6">
-  <h1 class="text-3xl font-semibold mb-6 text-center text-gray-800">
-    GDG JIST on Campus Participant Dashboard
-  </h1>
-
-  <div id="summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 hidden">
-    <div class="bg-white shadow p-4 rounded-2xl text-center">
-      <p class="text-gray-600 font-medium">Total Participants</p>
-      <h2 id="totalParticipants" class="text-2xl font-semibold text-blue-600">0</h2>
+<body class="bg-gray-100 min-h-screen">
+  
+  <div id="loaderOverlay" class="fixed inset-0 bg-gray-100 z-[999] flex flex-col justify-center items-center transition-all duration-1000 ease-in-out">
+    <div class="text-center">
+      <p id="loaderText" class="text-xl font-semibold text-gray-700 h-6 transition-opacity duration-300"></p>
     </div>
-    <div class="bg-white shadow p-4 rounded-2xl text-center">
-      <p class="text-gray-600 font-medium">Redeemed Codes</p>
-      <h2 id="redeemedCount" class="text-2xl font-semibold text-green-600">0</h2>
-    </div>
-    <div class="bg-white shadow p-4 rounded-2xl text-center">
-      <p class="text-gray-600 font-medium">Eligible for Cloud Study Jam</p>
-      <h2 id="eligibleCount" class="text-2xl font-semibold text-emerald-600">0</h2>
-    </div>
-    <div class="bg-white shadow p-4 rounded-2xl text-center">
-      <p class="text-gray-600 font-medium">Ineligible</p>
-      <h2 id="ineligibleCount" class="text-2xl font-semibold text-red-600">0</h2>
-    </div>
+    <h1 id="welcomeMessage" class="text-2xl md:text-3xl font-semibold text-center text-gray-800 opacity-0 transition-all duration-500 scale-95 mt-6 px-4">
+      </h1>
   </div>
 
-  <div id="leaderboardSection" class="hidden mb-10">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-5 text-center">🏆 Top 5 by Skill Badges Completed</h2>
-    <div id="leaderboardBody" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center"></div>
-  </div>
+  <nav class="bg-white shadow-md sticky top-0 z-40 opacity-0 transition-opacity duration-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex-shrink-0">
+          <span class="text-xl font-bold text-gray-800">GDG on Campus JIST</span>
+        </div>
+        <div class="hidden sm:flex sm:space-x-4">
+          <a href="#" id="navHome" class="nav-link text-blue-600 font-semibold px-3 py-2 rounded-md text-sm">Home</a>
+          <a href="#" id="navSwags" class="nav-link text-gray-700 font-medium hover:text-blue-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm">Swags</a>
+          <a href="https://docs.google.com/spreadsheets/d/1n4fc8w37mFo0ZYfoGrDW0B5A2_gJXGSKCCau5oAPTv4/edit?usp=sharing" id="navSyllabus" target="_blank" rel="noopener noreferrer" class="text-gray-700 font-medium hover:text-blue-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm">Syllabus</a>
+        </div>
+        <div class="sm:hidden">
+          <button id="mobileMenuButton" class="text-gray-700 p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transform transition hover:scale-110">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="mobileMenu" class="sm:hidden hidden">
+      <div class="px-2 pt-2 pb-3 space-y-1">
+        <a href="#" id="navHomeMobile" class="nav-link-mobile text-blue-600 font-semibold bg-blue-50 block px-3 py-2 rounded-md text-base">Home</a>
+        <a href="#" id="navSwagsMobile" class="nav-link-mobile text-gray-700 font-medium hover:text-blue-600 hover:bg-gray-100 block px-3 py-2 rounded-md text-base">Swags</a>
+        <a href="https://docs.google.com/spreadsheets/d/1n4fc8w37mFo0ZYfoGrDW0B5A2_gJXGSKCCau5oAPTv4/edit?usp=sharing" id="navSyllabusMobile" target="_blank" rel="noopener noreferrer" class="text-gray-700 font-medium hover:text-blue-600 hover:bg-gray-100 block px-3 py-2 rounded-md text-base">Syllabus</a>
+      </div>
+    </div>
+  </nav>
+  <main id="homeSection" class="p-4 md:p-6">
+  
+    <h1 class="text-2xl md:text-3xl font-semibold mb-6 text-center text-gray-800">
+      GDG on Campus JIST Participant Dashboard
+    </h1>
 
-  <div id="searchContainer" class="flex justify-center mb-4 hidden">
-    <input type="text" id="searchInput" placeholder="Search by name or email..."
-      class="w-full sm:w-1/2 border rounded-lg px-4 py-2 shadow-sm focus:ring-2 focus:ring-blue-400" />
-  </div>
+    <div id="summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8 hidden">
+      <div id="card-total" class="bg-white shadow p-4 rounded-2xl text-center cursor-pointer hover:shadow-lg transition transform hover:scale-105" style="opacity: 0;">
+        <p class="text-gray-600 font-medium">Total Participants</p>
+        <h2 id="totalParticipants" class="text-xl sm:text-2xl font-semibold text-blue-600">0</h2>
+      </div>
+      <div id="card-redeemed" class="bg-white shadow p-4 rounded-2xl text-center cursor-pointer hover:shadow-lg transition transform hover:scale-105" style="opacity: 0;">
+        <p class="text-gray-600 font-medium">Redeemed Codes</p>
+        <h2 id="redeemedCount" class="text-xl sm:text-2xl font-semibold text-green-600">0</h2>
+      </div>
+      <div id="card-eligible" class="bg-white shadow p-4 rounded-2xl text-center cursor-pointer hover:shadow-lg transition transform hover:scale-105" style="opacity: 0;">
+        <p class="text-gray-600 font-medium">Eligible for Cloud Study Jam</p>
+        <h2 id="eligibleCount" class="text-xl sm:text-2xl font-semibold text-emerald-600">0</h2>
+      </div>
+      <div id="card-ineligible" class="bg-white shadow p-4 rounded-2xl text-center cursor-pointer hover:shadow-lg transition transform hover:scale-105" style="opacity: 0;">
+        <p class="text-gray-600 font-medium">Ineligible (Click to see)</p>
+        <h2 id="ineligibleCount" class="text-xl sm:text-2xl font-semibold text-red-600">0</h2>
+      </div>
+      <div id="card-swags" class="bg-white shadow p-4 rounded-2xl text-center cursor-pointer hover:shadow-lg transition transform hover:scale-105" style="opacity: 0;">
+        <p class="text-gray-600 font-medium">Eligible for Swags</p>
+        <h2 id="swagCount" class="text-xl sm:text-2xl font-semibold text-indigo-600">0</h2>
+      </div>
+    </div>
 
-  <div class="overflow-x-auto">
-    <table id="dataTable" class="w-full bg-white rounded-2xl shadow hidden">
-      <thead class="bg-gray-200">
-        <tr class="text-gray-700 text-left">
-          <th class="py-3 px-4">User Name</th>
-          <th class="py-3 px-4">Email</th>
-          <th class="py-3 px-4">Access Code Status</th>
-          <th class="py-3 px-4">All Completed</th>
-          <th class="py-3 px-4 text-center">Action</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody" class="divide-y divide-gray-200"></tbody>
-    </table>
-  </div>
+    <div id="leaderboardSection" class="hidden mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-gray-800 mb-5 text-center">🏆 Top 3 by Skill Badges Completed</h2>
+      <div id="leaderboardBody" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center"></div>
+    </div>
 
-  <div id="detailModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div class="bg-white rounded-2xl shadow-lg w-11/12 sm:w-2/3 lg:w-1/2 p-6 relative">
+    <div id="searchContainer" class="flex justify-center mb-4 hidden" style="opacity: 0;">
+      <input type="text" id="searchInput" placeholder="Search by name or email..." class="w-full sm:w-1/2 border rounded-lg px-4 py-2 shadow-sm focus:ring-2 focus:ring-blue-400" />
+    </div>
+
+    <div class="overflow-x-auto">
+      <table id="dataTable" class="w-full bg-white rounded-2xl shadow hidden">
+        <thead class="bg-gray-200">
+          <tr class="text-gray-700 text-left">
+            <th class="py-3 px-4 text-sm whitespace-nowrap">User Name</th>
+            <th class="py-3 px-4 text-sm whitespace-nowrap">Email</th>
+            <th class="py-3 px-4 text-sm whitespace-nowrap">Access Code Status</th>
+            <th class="py-3 px-4 text-sm whitespace-nowrap">All Completed</th>
+            <th class="py-3 px-4 text-center text-sm whitespace-nowrap">Action</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody" class="divide-y divide-gray-200"></tbody>
+      </table>
+    </div>
+  </main>
+  <main id="swagsSection" class="p-4 md:p-6 hidden">
+    <h1 class="text-2xl md:text-3xl font-semibold mb-2 text-center text-gray-800">
+      🏆 Cloud Study Jam Swags
+    </h1>
+    <p class="text-center text-gray-600 mb-8">Help the community reach 100 eligible participants to unlock all swag tiers!</p>
+
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow-lg mb-10">
+      <div class="flex justify-between items-center mb-2">
+        <h3 class="text-base sm:text-lg font-semibold text-gray-700">Community Progress</h3>
+        <span id="progressCounter" class="text-lg sm:text-xl font-bold text-indigo-600">0 / 100</span>
+      </div>
+       <div class="relative pt-8"> <div class="h-4 bg-gray-200 rounded-full relative">
+            <div id="progressBarFill" class="h-full bg-gradient-to-r from-cyan-400 to-blue-600 rounded-full progress-bar-animated transition-all duration-1000 ease-out" style="width: 0%;"></div>
+            <div id="checkpoint50" class="checkpoint absolute top-0 h-full" style="left: 50%;">
+                <span class="absolute -top-7 -translate-x-1/2 text-xs font-bold text-gray-500 transition-colors">Tier 3</span>
+            </div>
+            <div id="checkpoint70" class="checkpoint absolute top-0 h-full" style="left: 70%;">
+                <span class="absolute -top-7 -translate-x-1/2 text-xs font-bold text-gray-500 transition-colors">Tier 2</span>
+            </div>
+            <div id="checkpoint100" class="checkpoint absolute top-0 h-full" style="left: 100%;">
+                <span class="absolute -top-7 -translate-x-1/2 text-xs font-bold text-gray-500 transition-colors">Tier 1</span>
+            </div>
+        </div>
+      </div>
+      <p id="encouragementMessage" class="text-center text-gray-600 mt-4 font-medium h-5 text-sm sm:text-base"></p>
+    </div>
+    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="bg-white rounded-2xl shadow-lg overflow-hidden transition transform hover:scale-105 hover:shadow-xl">
+        <div class="p-6">
+          <h3 class="text-2xl font-bold text-center text-indigo-600 mb-4">Tier 1</h3>
+          <div class="bg-gray-100 rounded-lg flex items-center justify-center">
+             <img src="https://i.ibb.co/HLy7BRSF/Whats-App-Image-2025-10-22-at-21-30-45-ee7eeadb.jpg" alt="Tier 1 Swags" class="object-contain w-full h-full rounded-lg">
+          </div>
+          <p class="text-gray-600 text-center mt-4">Unlocked when <strong class="text-gray-800">100 participants</strong> complete the program.</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-lg overflow-hidden transition transform hover:scale-105 hover:shadow-xl">
+        <div class="p-6">
+          <h3 class="text-2xl font-bold text-center text-blue-600 mb-4">Tier 2</h3>
+          <div class="bg-gray-100 rounded-lg flex items-center justify-center">
+            <img src="https://i.ibb.co/8LKtTZnJ/Whats-App-Image-2025-10-22-at-21-30-45-0aca1b49.jpg" alt="Tier 2 Swags" class="object-contain w-full h-full rounded-lg">
+          </div>
+          <p class="text-gray-600 text-center mt-4">Unlocked when <strong class="text-gray-800">70 participants</strong> complete the program.</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-lg overflow-hidden transition transform hover:scale-105 hover:shadow-xl">
+        <div class="p-6">
+          <h3 class="text-2xl font-bold text-center text-green-600 mb-4">Tier 3</h3>
+          <div class="bg-gray-100 rounded-lg flex items-center justify-center">
+            <img src="https://i.ibb.co/DDkjJj6n/Whats-App-Image-2025-10-22-at-21-39-49-15b89dd0.jpg" alt="Tier 3 Swags" class="object-contain w-full h-full rounded-lg">
+          </div>
+          <p class="text-gray-600 text-center mt-4">Unlocked when <strong class="text-gray-800">50 participants</strong> complete the program.</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+  <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-lg w-full max-w-2xl p-6 relative max-h-full overflow-y-auto">
       <button id="closeModal" class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
-      <h3 id="modalName" class="text-2xl font-semibold mb-1 text-gray-800"></h3>
-      <p id="modalEmail" class="text-gray-600 mb-3"></p>
+      <h3 id="modalName" class="text-xl sm:text-2xl font-semibold mb-1 text-gray-800"></h3>
+      <p id="modalEmail" class="text-gray-600 mb-3 break-all"></p>
       <a id="modalProfile" href="#" target="_blank" class="text-blue-500 hover:underline text-sm mb-4 inline-block">View Google Cloud Skills Profile</a>
       <div class="mb-4">
         <h4 class="font-medium text-gray-700 mb-1">Skill Badges:</h4>
@@ -73,7 +245,26 @@
     </div>
   </div>
 
+  <div id="countdownBox" class="fixed top-20 right-4 sm:top-24 sm:right-6 bg-white shadow-lg border border-gray-200 rounded-xl px-4 py-3 z-50 flex items-center gap-2">
+    <span class="text-blue-600 font-semibold hidden sm:inline">⏳ Completion Deadline:</span>
+    <span class="text-blue-600 font-semibold sm:hidden">⏳</span>
+    <span id="countdown" class="font-bold text-gray-800">--:--:--</span>
+  </div>
+
+  <footer class="text-center p-6 bg-gray-100">
+    <p class="text-sm text-gray-600">
+      Made with Morom ❤️ by Ezaz Ahmed (GDGoC Lead JIST)
+    </p>
+  </footer>
+
   <script>
+    // --- ELEMENTS ---
+    const homeSection = document.getElementById('homeSection');
+    const swagsSection = document.getElementById('swagsSection');
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const navLinksMobile = document.querySelectorAll('.nav-link-mobile');
     const tableBody = document.getElementById('tableBody');
     const summaryDiv = document.getElementById('summary');
     const leaderboardDiv = document.getElementById('leaderboardSection');
@@ -82,38 +273,173 @@
     const dataTable = document.getElementById('dataTable');
     const modal = document.getElementById('detailModal');
     const closeModal = document.getElementById('closeModal');
+    
+    // --- NEW LOADER ELEMENTS ---
+    const loaderOverlay = document.getElementById('loaderOverlay');
+    const loaderText = document.getElementById('loaderText');
+    const welcomeMessage = document.getElementById('welcomeMessage');
+    const nav = document.querySelector('nav');
+    
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQbtQn9ZK31tPZeJ09G9Tb0HulZ5St3E0VBHOqnZ2PmLSiUzeG9UcTdF--4C2px_UgivLOeaylMJnyq/pub?gid=0&single=true&output=csv';
 
     let data = [];
 
-    // **MODIFICATION START: Load data from URL on page load**
-    document.addEventListener('DOMContentLoaded', () => {
-      const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQbtQn9ZK31tPZeJ09G9Tb0HulZ5St3E0VBHOqnZ2PmLSiUzeG9UcTdF--4C2px_UgivLOeaylMJnyq/pub?gid=0&single=true&output=csv';
+    // Helper function for delays
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+    // --- NEW LOADER & PARSE FUNCTION ---
+    async function runLoaderAndParse() {
+      const texts = [
+        "Fetching results from the server...", 
+        "Verifying with the Organizer...", 
+        "Preparing the dashboard..."
+      ];
       
+      await sleep(500); // Small delay to start
+
+      for (const text of texts) {
+        loaderText.textContent = text;
+        await sleep(1500); // Show each message
+      }
+
+      loaderText.style.display = 'none'; // Hide loading text
+      
+      // Show Welcome message
+      welcomeMessage.textContent = 'Welcome to GDG JIST Cloud Study JAM Dashboard';
+      welcomeMessage.classList.remove('opacity-0', 'scale-95');
+      
+      await sleep(2000); // Let user read welcome message
+
+      // Animate loader away and fade in nav
+      loaderOverlay.classList.add('opacity-0', '-translate-y-full');
+      nav.classList.remove('opacity-0');
+      
+      await sleep(1000); // Wait for transition to finish
+      loaderOverlay.style.display = 'none'; // Remove loader from view
+
+      // Now, parse the data
       Papa.parse(csvUrl, {
-        download: true, // This is crucial for fetching the URL
+        download: true,
         header: true,
         complete: (results) => {
-          data = results.data.filter(row => row['User Name']); // Filter out empty rows
+          data = results.data.filter(row => row['User Name']);
           displaySummary();
+          updateSwagProgressBar();
           displayLeaderboard();
           renderTable(data);
           
-          // Show the hidden elements now that data is loaded
+          // --- ANIMATION LOGIC START ---
+          
+          // Animate summary cards
           summaryDiv.classList.remove('hidden');
+          Array.from(summaryDiv.children).forEach((card, index) => {
+            card.classList.add('animate-fadeInUp');
+            card.style.animationDelay = `${index * 100}ms`;
+          });
+
+          // Animate leaderboard (delay is handled in its function)
           leaderboardDiv.classList.remove('hidden');
+
+          // Animate search bar
           searchContainer.classList.remove('hidden');
+          searchContainer.classList.add('animate-fadeInUp');
+          searchContainer.style.animationDelay = '500ms'; // After cards
+
+          // Show table (rows are animated in their function)
           dataTable.classList.remove('hidden');
+          // --- ANIMATION LOGIC END ---
         }
       });
-    });
-    // **MODIFICATION END**
+    }
 
+    document.addEventListener('DOMContentLoaded', () => {
+      // Start the new loader sequence
+      runLoaderAndParse();
+      
+      // Start other independent functions
+      startCountdown();
+      makeDraggable(document.getElementById('countdownBox'));
+    });
+    
+    // --- EVENT LISTENERS ---
+    document.getElementById('card-eligible').addEventListener('click', () => {
+      const eligibleData = data.filter(row => (row['Access Code Redemption Status'] || '').trim().toLowerCase() === 'yes');
+      renderTable(eligibleData);
+    });
+
+    document.getElementById('card-ineligible').addEventListener('click', () => {
+      const ineligibleData = data.filter(row => (row['Access Code Redemption Status'] || '').trim().toLowerCase() === 'no');
+      renderTable(ineligibleData);
+    });
+
+    document.getElementById('card-total').addEventListener('click', () => renderTable(data));
+    document.getElementById('card-redeemed').addEventListener('click', () => renderTable(data));
+
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('#card-swags')) {
+        const swagData = data.filter(row => (row['All Skill Badges & Games Completed'] || '').trim().toLowerCase() === 'yes');
+        renderTable(swagData);
+      }
+    });
+    
+    // --- MODIFIED PROGRESS BAR FUNCTION ---
+    function updateSwagProgressBar() {
+        const swagEligible = data.filter(d => (d['All Skill Badges & Games Completed'] || '').trim().toLowerCase() === 'yes').length;
+        const maxGoal = 100;
+        const percentage = Math.min((swagEligible / maxGoal) * 100, 100);
+
+        document.getElementById('progressBarFill').style.width = `${percentage}%`;
+        document.getElementById('progressCounter').textContent = `${swagEligible} / ${maxGoal}`;
+        
+        const encouragementEl = document.getElementById('encouragementMessage');
+        let message = '';
+        if (swagEligible < 50) {
+            message = `Let's push to unlock <strong class="text-green-600">Tier 3</strong>! We need <strong class="text-gray-800">${50 - swagEligible}</strong> more completions.`;
+        } else if (swagEligible < 70) {
+            message = `Great job unlocking Tier 3! Now for <strong class="text-blue-600">Tier 2</strong>. Only <strong class="text-gray-800">${70 - swagEligible}</strong> to go!`;
+        } else if (swagEligible < 100) {
+            message = `Tier 2 is unlocked! The final push for <strong class="text-indigo-600">Tier 1</strong>! <strong class="text-gray-800">${100 - swagEligible}</strong> more needed!`;
+        } else {
+            message = `🎉 <strong class="text-indigo-600">Congratulations!</strong> All tiers have been unlocked! 🎉`;
+        }
+        encouragementEl.innerHTML = message;
+
+        const checkpoint50 = document.getElementById('checkpoint50');
+        const checkpoint70 = document.getElementById('checkpoint70');
+        const checkpoint100 = document.getElementById('checkpoint100');
+        
+        const label50 = checkpoint50.querySelector('span');
+        const label70 = checkpoint70.querySelector('span');
+        const label100 = checkpoint100.querySelector('span');
+
+        const reached50 = swagEligible >= 50;
+        checkpoint50.classList.toggle('checkpoint-active', reached50);
+        checkpoint50.classList.toggle('text-green-600', reached50);
+        label50.classList.toggle('text-green-600', reached50);
+        label50.classList.toggle('text-gray-500', !reached50);
+
+        const reached70 = swagEligible >= 70;
+        checkpoint70.classList.toggle('checkpoint-active', reached70);
+        checkpoint70.classList.toggle('text-blue-600', reached70);
+        label70.classList.toggle('text-blue-600', reached70);
+        label70.classList.toggle('text-gray-500', !reached70);
+
+        const reached100 = swagEligible >= 100;
+        checkpoint100.classList.toggle('checkpoint-active', reached100);
+        checkpoint100.classList.toggle('text-indigo-600', reached100);
+        label100.classList.toggle('text-indigo-600', reached100);
+        label100.classList.toggle('text-gray-500', !reached100);
+    }
+
+    // --- DATA DISPLAY FUNCTIONS ---
     function displaySummary() {
       const total = data.length;
       const redeemed = data.filter(d => (d['Access Code Redemption Status'] || '').trim().toLowerCase() === 'yes').length;
       const eligible = redeemed;
       const ineligible = data.filter(d => (d['Access Code Redemption Status'] || '').trim().toLowerCase() === 'no').length;
-
+      const swagEligible = data.filter(d => (d['All Skill Badges & Games Completed'] || '').trim().toLowerCase() === 'yes').length;
+      
+      document.getElementById('swagCount').textContent = swagEligible;
       document.getElementById('totalParticipants').textContent = total;
       document.getElementById('redeemedCount').textContent = redeemed;
       document.getElementById('eligibleCount').textContent = eligible;
@@ -125,18 +451,21 @@
       const sorted = [...data]
         .filter(d => d['# of Skill Badges Completed'])
         .sort((a, b) => parseInt(b['# of Skill Badges Completed']) - parseInt(a['# of Skill Badges Completed']))
-        .slice(0, 5);
+        .slice(0, 3);
 
       sorted.forEach((row, i) => {
-        const colors = ["bg-yellow-100", "bg-gray-100", "bg-orange-100", "bg-blue-100", "bg-purple-100"];
+        const colors = ["bg-yellow-100", "bg-gray-100", "bg-orange-100"];
         const card = document.createElement('div');
-        card.className = `${colors[i]} p-5 rounded-2xl shadow hover:shadow-lg transition cursor-pointer w-full sm:w-80`;
+        // ===== ADDED HOVER/ANIMATION CLASSES =====
+        card.className = `w-full sm:w-80 p-5 rounded-2xl shadow hover:shadow-lg transition transform hover:scale-105 cursor-pointer ${colors[i]} animate-fadeInUp`;
+        card.style.opacity = 0; // Start hidden for animation
+        card.style.animationDelay = `${i * 150}ms`; // Stagger animation
         card.innerHTML = `
           <div class="flex items-center space-x-4">
             <div class="text-3xl font-bold text-gray-700">#${i + 1}</div>
             <div>
               <p class="font-semibold text-gray-800">${row['User Name']}</p>
-              <p class="text-sm text-gray-600">${row['User Email']}</p>
+              <p class="text-sm text-gray-600 break-all">${row['User Email']}</p>
               <p class="text-blue-600 text-sm font-medium mt-1">Badges: ${row['# of Skill Badges Completed']}</p>
             </div>
           </div>`;
@@ -146,8 +475,11 @@
     }
 
     function renderTable(filteredData) {
+      filteredData.sort((a, b) => (parseInt(b['# of Skill Badges Completed']) || 0) - (parseInt(a['# of Skill Badges Completed']) || 0));
       tableBody.innerHTML = '';
-      filteredData.forEach(row => {
+      
+      // ===== ADDED 'index' TO forEach FOR ANIMATION =====
+      filteredData.forEach((row, index) => {
         const access = (row['Access Code Redemption Status'] || '').trim().toLowerCase();
         const bgColor = access === 'yes'
           ? 'bg-green-100 hover:bg-green-200'
@@ -155,17 +487,40 @@
           ? 'bg-red-100 hover:bg-red-200'
           : 'bg-white hover:bg-gray-50';
 
+        const badgeCount = parseInt(row['# of Skill Badges Completed']) || 0;
+        const totalBadges = 20;
+        const percent = Math.min((badgeCount / totalBadges) * 100, 100);
+
+        let barColor = 'bg-red-500';
+        if (badgeCount >= 15) barColor = 'bg-green-500';
+        else if (badgeCount >= 10) barColor = 'bg-orange-400';
+
         const tr = document.createElement('tr');
-        tr.className = `${bgColor} transition`;
+        // ===== ADDED ANIMATION CLASSES/STYLE =====
+        tr.className = `${bgColor} transition text-sm animate-fadeInUp`;
+        tr.style.opacity = 0;
+        tr.style.animationDelay = `${index * 20}ms`; // Stagger row animation
+        
         tr.innerHTML = `
-          <td class="py-3 px-4 font-medium text-gray-800">${row['User Name']}</td>
-          <td class="py-3 px-4">${row['User Email']}</td>
-          <td class="py-3 px-4">${row['Access Code Redemption Status']}</td>
-          <td class="py-3 px-4">${row['All Skill Badges & Games Completed']}</td>
-          <td class="py-3 px-4 text-center">
-            <button class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
+          <td class="py-3 px-4 font-medium text-gray-800 whitespace-nowrap">${row['User Name']}</td>
+          <td class="py-3 px-4 whitespace-nowrap">${row['User Email']}</td>
+          <td class="py-3 px-4 min-w-[150px]">
+            <div class="space-y-1">
+              <div class="flex items-center justify-between whitespace-nowrap">
+                <span>${row['Access Code Redemption Status']}</span>
+                <span class="text-xs text-gray-600 ml-2">(${badgeCount} badges)</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div class="h-2 ${barColor}" style="width:${percent}%;"></div>
+              </div>
+            </div>
+          </td>
+          <td class="py-3 px-4 whitespace-nowrap">${row['All Skill Badges & Games Completed']}</td>
+          <td class="py-3 px-4 text-center whitespace-nowrap">
+            <button class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-xs"
               onclick='showDetails(${JSON.stringify(row)})'>View Details</button>
-          </td>`;
+          </td>
+        `;
         tableBody.appendChild(tr);
       });
     }
@@ -174,19 +529,20 @@
       document.getElementById('modalName').textContent = row['User Name'] || '';
       document.getElementById('modalEmail').textContent = row['User Email'] || '';
       document.getElementById('modalProfile').href = row['Google Cloud Skills Boost Profile URL'] || '#';
-
       const badges = (row['Names of Completed Skill Badges'] || '').split(',').filter(Boolean);
       const games = (row['Names of Completed Arcade Games'] || '').split(',').filter(Boolean);
-
       document.getElementById('badgeList').innerHTML = badges.map(b => `<li>${b.trim()}</li>`).join('') || '<li>No badges completed yet.</li>';
       document.getElementById('gameList').innerHTML = games.map(g => `<li>${g.trim()}</li>`).join('') || '<li>No games completed yet.</li>';
-
-      modal.classList.remove('hidden');
+      
+      // ===== MODIFIED TO TOGGLE CLASS INSTEAD OF 'hidden' =====
+      modal.classList.add('modal-open');
     }
 
-    closeModal.addEventListener('click', () => modal.classList.add('hidden'));
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+    // ===== MODIFIED TO TOGGLE CLASS INSTEAD OF 'hidden' =====
+    closeModal.addEventListener('click', () => modal.classList.remove('modal-open'));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('modal-open'); });
 
+    // --- UTILITY FUNCTIONS ---
     document.getElementById('searchInput').addEventListener('input', (e) => {
       const term = e.target.value.toLowerCase();
       const filtered = data.filter(row =>
@@ -195,6 +551,110 @@
       );
       renderTable(filtered);
     });
+
+    function setActiveLink(activeId) {
+      homeSection.classList.toggle('hidden', activeId !== 'navHome');
+      swagsSection.classList.toggle('hidden', activeId !== 'navSwags');
+      navLinks.forEach(link => {
+        if (link.id.includes('Syllabus')) return;
+        if (link.id === activeId) {
+          link.classList.add('text-blue-600', 'font-semibold');
+          link.classList.remove('text-gray-700', 'font-medium', 'hover:text-blue-600', 'hover:bg-gray-100');
+        } else {
+          link.classList.remove('text-blue-600', 'font-semibold');
+          link.classList.add('text-gray-700', 'font-medium', 'hover:text-blue-600', 'hover:bg-gray-100');
+        }
+      });
+      navLinksMobile.forEach(link => {
+        if (link.id.includes('Syllabus')) return;
+        if (link.id === `${activeId}Mobile`) {
+          link.classList.add('text-blue-600', 'font-semibold', 'bg-blue-50');
+          link.classList.remove('text-gray-700', 'font-medium', 'hover:text-blue-600', 'hover:bg-gray-100');
+        } else {
+          link.classList.remove('text-blue-600', 'font-semibold', 'bg-blue-50');
+          link.classList.add('text-gray-700', 'font-medium', 'hover:text-blue-600', 'hover:bg-gray-100');
+        }
+      });
+      mobileMenu.classList.add('hidden');
+    }
+
+    document.getElementById('navHome').addEventListener('click', (e) => { e.preventDefault(); setActiveLink('navHome'); });
+    document.getElementById('navSwags').addEventListener('click', (e) => { e.preventDefault(); setActiveLink('navSwags'); });
+    document.getElementById('navHomeMobile').addEventListener('click', (e) => { e.preventDefault(); setActiveLink('navHome'); });
+    document.getElementById('navSwagsMobile').addEventListener('click', (e) => { e.preventDefault(); setActiveLink('navSwags'); });
+
+    mobileMenuButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+    function startCountdown() {
+      const countdownEl = document.getElementById("countdown");
+      const end = new Date();
+      end.setFullYear(2025, 9, 30); // Note: 9 is October
+      end.setHours(23, 59, 59, 999);
+      let timer;
+      function updateCountdown() {
+        const now = new Date();
+        const diff = end - now;
+        if (diff <= 0) {
+          countdownEl.textContent = "Deadline reached!";
+          countdownEl.classList.add("text-red-600");
+          if (timer) clearInterval(timer);
+          return;
+        }
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        let timeString = "";
+        if (days > 0) timeString += `${days}d `;
+        timeString += `${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+        countdownEl.textContent = timeString;
+        if (diff < 86400000) countdownEl.classList.add("text-red-500", "animate-pulse");
+      }
+      updateCountdown();
+      timer = setInterval(updateCountdown, 1000);
+    }
+
+    function makeDraggable(element) {
+      let isDragging = false, offsetX, offsetY;
+      element.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        offsetX = e.clientX - element.getBoundingClientRect().left;
+        offsetY = e.clientY - element.getBoundingClientRect().top;
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        let newX = e.clientX - offsetX;
+        let newY = e.clientY - offsetY;
+        newX = Math.max(0, Math.min(newX, window.innerWidth - element.offsetWidth));
+        newY = Math.max(0, Math.min(newY, window.innerHeight - element.offsetHeight));
+        element.style.left = `${newX}px`;
+        element.style.top = `${newY}px`;
+        element.classList.remove('top-24', 'right-6', 'top-20', 'right-4'); 
+      });
+      document.addEventListener('mouseup', () => { isDragging = false; });
+      element.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        const touch = e.touches[0];
+        offsetX = touch.clientX - element.getBoundingClientRect().left;
+        offsetY = touch.clientY - element.getBoundingClientRect().top;
+        e.preventDefault();
+      }, { passive: false });
+      document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        const touch = e.touches[0];
+        let newX = touch.clientX - offsetX;
+        let newY = touch.clientY - offsetY;
+        newX = Math.max(0, Math.min(newX, window.innerWidth - element.offsetWidth));
+        newY = Math.max(0, Math.min(newY, window.innerHeight - element.offsetHeight));
+        element.style.left = `${newX}px`;
+        element.style.top = `${newY}px`;
+        element.classList.remove('top-24', 'right-6', 'top-20', 'right-4');
+      });
+      document.addEventListener('touchend', () => {
+        isDragging = false;
+      });
+    }
   </script>
 </body>
 </html>
