@@ -263,13 +263,17 @@
       <h3 id="modalName" class="text-xl sm:text-2xl font-semibold mb-1 text-gray-800"></h3>
       <p id="modalEmail" class="text-gray-600 mb-3 break-all"></p>
       <a id="modalProfile" href="#" target="_blank" class="text-blue-500 hover:underline text-sm mb-4 inline-block">View Google Cloud Skills Profile</a>
-      <div class="mb-4">
-        <h4 class="font-medium text-gray-700 mb-1">Skill Badges:</h4>
-        <ul id="badgeList" class="list-disc list-inside text-gray-600"></ul>
-      </div>
-      <div>
-        <h4 class="font-medium text-gray-700 mb-1">Arcade Games:</h4>
-        <ul id="gameList" class="list-disc list-inside text-gray-600"></ul>
+      <div class="space-y-4">
+        <div>
+          <h4 class="text-lg font-semibold text-gray-800 mb-2 border-b pb-1">Skill Badges</h4>
+          <div id="modalSkillBadges">
+            </div>
+        </div>
+        <div>
+          <h4 class="text-lg font-semibold text-gray-800 mb-2 border-b pb-1 mt-4">Arcade Games</h4>
+          <div id="modalArcadeGames">
+            </div>
+        </div>
       </div>
     </div>
   </div>
@@ -310,6 +314,34 @@
     // --- CONFIGURATION ---
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQbtQn9ZK31tPZeJ09G9Tb0HulZ5St3E0VBHOqnZ2PmLSiUzeG9UcTdF--4C2px_UgivLOeaylMJnyq/pub?gid=0&single=true&output=csv';
     let data = []; // Global store for participant data
+
+    // --- MASTER LISTS FOR COMPLETION ---
+    const ALL_SKILL_BADGES = [
+      'The Basics of Google Cloud Compute [Skill Badge]',
+      'Get Started with Cloud Storage [Skill Badge]',
+      'Get Started with Pub/Sub [Skill Badge]',
+      'Get Started with API Gateway [Skill Badge]',
+      'Get Started with Looker [Skill Badge]',
+      'Get Started with Dataplex [Skill Badge]',
+      'Get Started with Google Workspace Tools [Skill Badge]',
+      'App Building with AppSheet [Skill Badge]',
+      'Develop with Apps Script and AppSheet [Skill Badge]',
+      'Build a Website on Google Cloud [Skill Badge]',
+      'Set Up a Google Cloud Network [Skill Badge]',
+      'Store, Process, and Manage Data on Google Cloud - Console [Skill Badge]',
+      'Cloud Run Functions: 3 Ways [Skill Badge]',
+      'App Engine: 3 Ways [Skill Badge]',
+      'Cloud Speech API: 3 Ways [Skill Badge]',
+      'Monitoring in Google Cloud [Skill Badge]',
+      'Analyze Speech and Language with Google APIs [Skill Badge]',
+      'Prompt Design in Vertex AI [Skill Badge]',
+      'Develop Gen AI Apps with Gemini and Streamlit [Skill Badge]'
+    ];
+
+    const ALL_ARCADE_GAMES = [
+      'Level 3: Generative AI [Game]'
+    ];
+    // --- END MASTER LISTS ---
 
     // Helper function for delays
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -617,7 +649,8 @@
       });
     }
 
-    /**
+/**
+     * === THIS IS THE **UPDATED** showDetails FUNCTION (v3) ===
      * Populates and shows the modal with a specific participant's details.
      * @param {object} row - The participant data object.
      */
@@ -626,20 +659,89 @@
       document.getElementById('modalEmail').textContent = row['User Email'] || '';
       document.getElementById('modalProfile').href = row['Google Cloud Skills Boost Profile URL'] || '#';
 
-      const badges = (row['Names of Completed Skill Badges'] || '').split(',').filter(Boolean);
-      const games = (row['Names of Completed Arcade Games'] || '').split(',').filter(Boolean);
+      // --- Helper function to generate HTML for a list ---
+      const createListHtml = (title, items, colorClass) => {
+        if (items.length === 0) {
+          return ''; // Don't show a section if there are no items
+        }
+        let listItems = items.map(item => `<li class="ml-4 list-disc">${item}</li>`).join('');
+        return `
+          <h5 class="font-medium ${colorClass} mb-1 mt-3">${title} (${items.length})</h5>
+          <ul class="text-gray-600 space-y-1">${listItems}</ul>
+        `;
+      };
 
-      document.getElementById('badgeList').innerHTML = badges.length > 0 ?
-        badges.map(b => `<li>${b.trim()}</li>`).join('') :
-        '<li>No badges completed yet.</li>';
+      // --- Helper function to clean the messy CSV data ---
+      const cleanAndFilterList = (rawString) => {
+        const junkWords = ["store", "process"];
+        
+        // 1. Split the raw string by the pipe '|'
+        const items = (rawString || '').split('|');
 
-      document.getElementById('gameList').innerHTML = games.length > 0 ?
-        games.map(g => `<li>${g.trim()}</li>`).join('') :
-        '<li>No games completed yet.</li>';
+        // 2. Map over each item to clean it
+        const cleanedItems = items.map(item => {
+          // Replace newlines, bullets, etc., with a space
+          let cleaned = item.replace(/(\r\n|\n|\r|•)/gm, " ");
+          // Consolidate multiple spaces into one
+          cleaned = cleaned.replace(/\s+/g, ' ').trim();
+          
+          // **FIX**: Correct the "Store Process and Manage..." badge
+          if (cleaned.toLowerCase().startsWith("store process and manage")) {
+            cleaned = cleaned.replace(/^Store\s/i, ""); // Remove "Store " from the front
+          }
+          return cleaned;
+        });
+
+        // 3. Filter out empty strings and junk-only words
+        return cleanedItems.filter(item => {
+          return item.length > 0 && !junkWords.includes(item.toLowerCase());
+        });
+      };
+
+      // --- 1. Process Skill Badges ---
+      const completedBadges = cleanAndFilterList(row['Names of Completed Skill Badges']);
+      
+      // Find not completed badges
+      const notCompletedBadges = ALL_SKILL_BADGES.filter(masterBadge => {
+        return !completedBadges.some(completedBadge => completedBadge.toLowerCase() === masterBadge.toLowerCase());
+      });
+
+      // Get HTML for badge lists
+      const completedBadgesHtml = createListHtml('Completed', completedBadges, 'text-green-600');
+      const notCompletedBadgesHtml = createListHtml('Not Completed', notCompletedBadges, 'text-red-600');
+      
+      const badgeContainer = document.getElementById('modalSkillBadges');
+      badgeContainer.innerHTML = completedBadgesHtml + notCompletedBadgesHtml;
+      
+      if (badgeContainer.innerHTML === '') {
+         badgeContainer.innerHTML = '<p class="text-gray-500">No badge information available.</p>';
+      } else if (notCompletedBadges.length === 0 && completedBadges.length > 0) {
+         badgeContainer.innerHTML = completedBadgesHtml + '<p class="font-medium text-green-600 mt-3">🎉 All skill badges completed!</p>';
+      }
+
+      // --- 2. Process Arcade Games ---
+      const completedGames = cleanAndFilterList(row['Names of Completed Arcade Games']);
+
+      // Find not completed games
+      const notCompletedGames = ALL_ARCADE_GAMES.filter(masterGame => {
+         return !completedGames.some(completedGame => completedGame.toLowerCase() === masterGame.toLowerCase());
+      });
+
+      // Get HTML for game lists
+      const completedGamesHtml = createListHtml('Completed', completedGames, 'text-green-600');
+      const notCompletedGamesHtml = createListHtml('Not Completed', notCompletedGames, 'text-red-600');
+
+      const gameContainer = document.getElementById('modalArcadeGames');
+      gameContainer.innerHTML = completedGamesHtml + notCompletedGamesHtml;
+      
+      if (gameContainer.innerHTML === '') {
+        gameContainer.innerHTML = '<p class="text-gray-500">No game information available.</p>';
+      } else if (notCompletedGames.length === 0 && completedGames.length > 0) {
+         gameContainer.innerHTML = completedGamesHtml + '<p class="font-medium text-green-600 mt-3">🎉 All arcade games completed!</p>';
+      }
 
       modal.classList.add('modal-open');
     }
-
 
     // --- UTILITY FUNCTIONS ---
 
