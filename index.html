@@ -185,6 +185,7 @@
       <table id="dataTable" class="w-full bg-white rounded-2xl shadow hidden">
         <thead class="bg-gray-200">
           <tr class="text-gray-700 text-left">
+            <th class="py-3 px-4 text-sm whitespace-nowrap text-center">Sl.</th>
             <th class="py-3 px-4 text-sm whitespace-nowrap">User Name</th>
             <th class="py-3 px-4 text-sm whitespace-nowrap">Email</th>
             <th class="py-3 px-4 text-sm whitespace-nowrap">Access Code Status</th>
@@ -267,12 +268,12 @@
         <div>
           <h4 class="text-lg font-semibold text-gray-800 mb-2 border-b pb-1">Skill Badges</h4>
           <div id="modalSkillBadges">
-            </div>
+          </div>
         </div>
         <div>
           <h4 class="text-lg font-semibold text-gray-800 mb-2 border-b pb-1 mt-4">Arcade Games</h4>
           <div id="modalArcadeGames">
-            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -287,7 +288,7 @@
   <footer class="text-center p-6 bg-gray-100">
     <p class="text-sm text-gray-600">
       Made with Morom ❤️ by Ezaz Ahmed (GDGoC Lead JIST)
-    </p>
+    </Next.js>
   </footer>
 
   <script>
@@ -397,6 +398,14 @@
 
           // 6. Animate content in after data is loaded
           animateContentIn();
+        },
+        error: (error) => {
+            console.error("Error fetching or parsing CSV:", error);
+            // You could show an error message to the user here
+            loaderText.style.display = 'block';
+            loaderText.textContent = 'Error loading data. Please check console.';
+            welcomeMessage.textContent = 'Could not load dashboard data.';
+            welcomeMessage.classList.remove('opacity-0', 'scale-95');
         }
       });
     }
@@ -613,7 +622,9 @@
         tr.style.animationDelay = `${index * 20}ms`; // Stagger row animation
 
         // Set inner HTML for all cells *except* the button cell
+        // 2. MODIFICATION: ADDED SERIAL NUMBER CELL
         tr.innerHTML = `
+          <td class="py-3 px-4 text-center font-medium text-gray-700">${index + 1}</td>
           <td class="py-3 px-4 font-medium text-gray-800 whitespace-nowrap">${row['User Name']}</td>
           <td class="py-3 px-4 whitespace-nowrap">${row['User Email']}</td>
           <td class="py-3 px-4 min-w-[150px]">
@@ -714,9 +725,9 @@
       badgeContainer.innerHTML = completedBadgesHtml + notCompletedBadgesHtml;
       
       if (badgeContainer.innerHTML === '') {
-         badgeContainer.innerHTML = '<p class="text-gray-500">No badge information available.</p>';
+           badgeContainer.innerHTML = '<p class="text-gray-500">No badge information available.</p>';
       } else if (notCompletedBadges.length === 0 && completedBadges.length > 0) {
-         badgeContainer.innerHTML = completedBadgesHtml + '<p class="font-medium text-green-600 mt-3">🎉 All skill badges completed!</p>';
+           badgeContainer.innerHTML = completedBadgesHtml + '<p class="font-medium text-green-600 mt-3">🎉 All skill badges completed!</p>';
       }
 
       // --- 2. Process Arcade Games ---
@@ -724,7 +735,7 @@
 
       // Find not completed games
       const notCompletedGames = ALL_ARCADE_GAMES.filter(masterGame => {
-         return !completedGames.some(completedGame => completedGame.toLowerCase() === masterGame.toLowerCase());
+           return !completedGames.some(completedGame => completedGame.toLowerCase() === masterGame.toLowerCase());
       });
 
       // Get HTML for game lists
@@ -737,7 +748,7 @@
       if (gameContainer.innerHTML === '') {
         gameContainer.innerHTML = '<p class="text-gray-500">No game information available.</p>';
       } else if (notCompletedGames.length === 0 && completedGames.length > 0) {
-         gameContainer.innerHTML = completedGamesHtml + '<p class="font-medium text-green-600 mt-3">🎉 All arcade games completed!</p>';
+           gameContainer.innerHTML = completedGamesHtml + '<p class="font-medium text-green-600 mt-3">🎉 All arcade games completed!</p>';
       }
 
       modal.classList.add('modal-open');
