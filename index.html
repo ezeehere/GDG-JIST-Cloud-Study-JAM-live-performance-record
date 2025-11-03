@@ -7,6 +7,8 @@
   
   <script src="https://cdn.tailwindcss.com"></script>
   
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -26,13 +28,49 @@
       }
     }
     .animate-fadeInUp {
+      opacity: 0; 
       animation: fadeInUp 0.8s ease-out forwards;
+    }
+
+    @keyframes landDigit {
+      0% {
+        transform: scale(1.8);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    .animate-landDigit {
+      animation: landDigit 0.4s ease-out forwards;
+    }
+
+    @keyframes slideUpIn {
+      from {
+        opacity: 0;
+        transform: translateY(100px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-slideUpIn {
+      animation: slideUpIn 1s ease-out forwards;
+    }
+
+    /* Style for the search bar */
+    .search-input:focus {
+      border-color: #4f46e5; /* indigo-600 */
+      box-shadow: 0 0 0 2px #c7d2fe; /* indigo-100 */
+      outline: none;
     }
   </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center p-6">
 
-  <div class="bg-white p-6 sm:p-12 rounded-3xl shadow-2xl w-full max-w-3xl text-center animate-fadeInUp" style="opacity: 0; animation-delay: 0.2s;">
+  <div id="mainCard" class="bg-white p-6 sm:p-12 rounded-3xl shadow-2xl w-full max-w-3xl text-center animate-fadeInUp" style="opacity: 0; animation-delay: 0.2s;">
 
     <div class="flex justify-center items-center gap-3 mb-4">
       <svg class="w-8 sm:w-10 h-8 sm:h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -83,18 +121,495 @@
         The Final Report is ready!
       </h2>
       <p class="text-lg sm:text-xl text-slate-600 mt-4">Thank you for your participation.</p>
+
+      <button id="openReportBtn" class="mt-8 bg-green-600 text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-green-700 transition-all transform hover:scale-105 ease-in-out">
+        Open the report
+      </button>
     </div>
 
     <p class="text-sm text-slate-400 mt-12">
       Made with Morom ❤️ by Ezaz Ahmed (GDGoC Lead JIST)
     </p>
+  </div>
+
+  
+  <div id="accomplishmentScreen" class="hidden bg-white p-6 sm:p-12 rounded-3xl shadow-2xl w-full max-w-3xl text-center relative" style="opacity: 0; transform: translateY(100px);">
+    <h2 class="text-3xl sm:text-5xl font-bold text-slate-800 mb-8 animate-fadeInUp" style="animation-delay: 0.8s; opacity: 0;">
+      We accomplished...
+    </h2>
+
+    <div class="bg-blue-50 p-6 rounded-2xl border border-blue-200 shadow-inner mb-8 animate-fadeInUp" style="animation-delay: 1.2s; opacity: 0;">
+        <div id="casinoDigitContainer" class="flex flex-col items-center justify-center">
+            <div id="casinoDigit" class="text-8xl sm:text-[10rem] font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2" style="min-height: 120px;">
+                3
+            </div>
+            <p class="text-3xl sm:text-5xl font-bold text-blue-800 mt-2">
+                Tier
+            </p>
+        </div>
+    </div>
+
+    <div id="topPerformerList" class="hidden mt-10 space-y-4">
+        
+      <div class="flex items-center bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-100 animate-fadeInUp">
+          <div class="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 font-bold mr-4">🎉</div>
+          <div class="text-left">
+              <p class="text-lg font-semibold text-slate-700">Ezaz Ahmed</p>
+              <p class="text-sm text-slate-500">Lead organizer for the campaign</p>
+          </div>
+      </div>
+      
+      <div class="flex items-center bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-100 animate-fadeInUp">
+          <div class="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center text-green-700 font-bold mr-4">✨</div>
+          <div class="text-left">
+              <p class="text-lg font-semibold text-slate-700">Abhinav Kaman</p>
+              <p class="text-sm text-slate-500">Top performer (14 Accounts Completions)</p>
+          </div>
+      </div>
+      
+      <div class="flex items-center bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-100 animate-fadeInUp">
+          <div class="w-10 h-10 bg-purple-200 rounded-full flex items-center justify-center text-purple-700 font-bold mr-4">🏆</div>
+          <div class="text-left">
+              <p class="text-lg font-semibold text-slate-700">Abhishek Sharma</p>
+              <p class="text-sm text-slate-500">Outstanding technical contributor</p>
+          </div>
+      </div>
+    </div>
+
+    <div id="eligibleIndividualsList" class="hidden mt-12 text-left">
+      <h3 class="text-2xl font-bold text-slate-800 text-center">Eligible Individuals (Top 100 Perfomers)</h3>
+      <p class="text-sm text-slate-500 text-center mt-2 mb-6">
+        "Thank you so much for participating in this month long campaign, will be happy to conduct more things soon" - Ezaz Ahmedc(GDGoC Lead JIST)
+      </p>
+
+      <div class="relative mb-6">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+        </span>
+        <input type="text" id="searchBar" placeholder="Search for a student..." class="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg search-input transition-all duration-300">
+      </div>
+
+      <hr class="mb-6"/>
+
+      <div id="studentListContainer" class="space-y-3 pr-2">
+        
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">1</div>
+          <p class="text-base font-medium text-slate-700 student-name">Ezaz Ahmed Khan</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">2</div>
+          <p class="text-base font-medium text-slate-700 student-name">Hridiman Sarmah</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">3</div>
+          <p class="text-base font-medium text-slate-700 student-name">Udipta Baruah</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">4</div>
+          <p class="text-base font-medium text-slate-700 student-name">Diya Dey</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">5</div>
+          <p class="text-base font-medium text-slate-700 student-name">Sabbu Alam</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">6</div>
+          <p class="text-base font-medium text-slate-700 student-name">Aluk Ranjan Boruah</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">7</div>
+          <p class="text-base font-medium text-slate-700 student-name">Basob Raj</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">8</div>
+          <p class="text-base font-medium text-slate-700 student-name">Bhargav Kalita</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">9</div>
+          <p class="text-base font-medium text-slate-700 student-name">Geetartha Dutta</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">10</div>
+          <p class="text-base font-medium text-slate-700 student-name">Sukanta Sarkar</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">11</div>
+          <p class="text-base font-medium text-slate-700 student-name">Krishna Prasad</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">12</div>
+          <p class="text-base font-medium text-slate-700 student-name">Anurag</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">13</div>
+          <p class="text-base font-medium text-slate-700 student-name">Debika Das</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">14</div>
+          <p class="text-base font-medium text-slate-700 student-name">Ayan Kashyap</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">15</div>
+          <p class="text-base font-medium text-slate-700 student-name">Krishanu Kashyap</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">16</div>
+          <p class="text-base font-medium text-slate-700 student-name">Eurupah</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">17</div>
+          <p class="text-base font-medium text-slate-700 student-name">M Shamananda</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">18</div>
+          <p class="text-base font-medium text-slate-700 student-name">Ritabrat Saikia</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">19</div>
+          <p class="text-base font-medium text-slate-700 student-name">Prabhakar Boro</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">20</div>
+          <p class="text-base font-medium text-slate-700 student-name">Kankan</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">21</div>
+          <p class="text-base font-medium text-slate-700 student-name">Parlee Bora</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">22</div>
+          <p class="text-base font-medium text-slate-700 student-name">Boishnab Gogoi</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">23</div>
+          <p class="text-base font-medium text-slate-700 student-name">Abhinav Kaman</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">24</div>
+          <p class="text-base font-medium text-slate-700 student-name">Dhunu</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">25</div>
+          <p class="text-base font-medium text-slate-700 student-name">Himangshu Gogoi</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">26</div>
+          <p class="text-base font-medium text-slate-700 student-name">Kongkon Ray</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">27</div>
+          <p class="text-base font-medium text-slate-700 student-name">Swaroopa Goswami</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">28</div>
+          <p class="text-base font-medium text-slate-700 student-name">Abhishek Kumar Sharma</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">29</div>
+          <p class="text-base font-medium text-slate-700 student-name">Maruf Ahmed</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">30</div>
+          <p class="text-base font-medium text-slate-700 student-name">Nilabh</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">31</div>
+          <p class="text-base font-medium text-slate-700 student-name">Surangana Sarmah</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">32</div>
+          <p class="text-base font-medium text-slate-700 student-name">Nirmali Saikia</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">33</div>
+          <p class="text-base font-medium text-slate-700 student-name">Subhankar</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">34</div>
+          <p class="text-base font-medium text-slate-700 student-name">Muktimoy Neog</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">35</div>
+          <p class="text-base font-medium text-slate-700 student-name">Snigdhaa Parasar</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">36</div>
+          <p class="text-base font-medium text-slate-700 student-name">Isha Mahanta</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">37</div>
+          <p class="text-base font-medium text-slate-700 student-name">Rulishikha</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">38</div>
+          <p class="text-base font-medium text-slate-700 student-name">Ishan Baruah</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">39</div>
+          <p class="text-base font-medium text-slate-700 student-name">Likshita Konwar</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">40</div>
+          <p class="text-base font-medium text-slate-700 student-name">Satyami</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">41</div>
+          <p class="text-base font-medium text-slate-700 student-name">Abhishek Dutta</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">42</div>
+          <p class="text-base font-medium text-slate-700 student-name">Jublee Kalita</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">43</div>
+          <p class="text-base font-medium text-slate-700 student-name">Madhurjya Neog</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">44</div>
+          <p class="text-base font-medium text-slate-700 student-name">Hemanga Dutta</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">45</div>
+          <p class="text-base font-medium text-slate-700 student-name">Abhishek Shah</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">46</div>
+          <p class="text-base font-medium text-slate-700 student-name">Bishal Sinha</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">47</div>
+          <p class="text-base font-medium text-slate-700 student-name">Deepsikha</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">48</div>
+          <p class="text-base font-medium text-slate-700 student-name">Tushar Baruah</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">49</div>
+          <p class="text-base font-medium text-slate-700 student-name">Hridayam Gogoi</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">50</div>
+          <p class="text-base font-medium text-slate-700 student-name">Bharat Sonowal</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">51</div>
+          <p class="text-base font-medium text-slate-700 student-name">Arpita</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">52</div>
+          <p class="text-base font-medium text-slate-700 student-name">Queen Mary Boro</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">53</div>
+          <p class="text-base font-medium text-slate-700 student-name">Hirokjyoti Pathak</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">54</div>
+          <p class="text-base font-medium text-slate-700 student-name">Abhinab Bordoloi</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">55</div>
+          <p class="text-base font-medium text-slate-700 student-name">Debojit</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">56</div>
+          <p class="text-base font-medium text-slate-700 student-name">Abhiraj Saikia</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">57</div>
+          <p class="text-base font-medium text-slate-700 student-name">Rituraj Bora</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">58</div>
+          <p class="text-base font-medium text-slate-700 student-name">Manosh Jyoti</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">59</div>
+          <p class="text-base font-medium text-slate-700 student-name">Geetartha Kashyap</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">60</div>
+          <p class="text-base font-medium text-slate-700 student-name">Hiya</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">61</div>
+          <p class="text-base font-medium text-slate-700 student-name">Bharnij M</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">62</div>
+          <p class="text-base font-medium text-slate-700 student-name">Samudra</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">63</div>
+          <p class="text-base font-medium text-slate-700 student-name">Bhanitabh</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">64</div>
+          <p class="text-base font-medium text-slate-700 student-name">Tushar</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">65</div>
+          <p class="text-base font-medium text-slate-700 student-name">Jachika Bhuyan</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">66</div>
+          <p class="text-base font-medium text-slate-700 student-name">Barsha Saikia</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">67</div>
+          <p class="text-base font-medium text-slate-700 student-name">Violish</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">68</div>
+          <p class="text-base font-medium text-slate-700 student-name">Ishaan</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">69</div>
+          <p class="text-base font-medium text-slate-700 student-name">Arpana</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">70</div>
+          <p class="text-base font-medium text-slate-700 student-name">Bidisha</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">71</div>
+          <p class="text-base font-medium text-slate-700 student-name">Samistha</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">72</div>
+          <p class="text-base font-medium text-slate-700 student-name">Om Das</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">73</div>
+          <p class="text-base font-medium text-slate-700 student-name">Armin</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">74</div>
+          <p class="text-base font-medium text-slate-700 student-name">Protiksha</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">75</div>
+          <p class="text-base font-medium text-slate-700 student-name">Bidisha</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">76</div>
+          <p class="text-base font-medium text-slate-700 student-name">Madhulika</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">77</div>
+          <p class="text-base font-medium text-slate-700 student-name">Gitashree</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">78</div>
+          <p class="text-base font-medium text-slate-700 student-name">Amit</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">79</div>
+          <p class="text-base font-medium text-slate-700 student-name">Raj</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">80</div>
+          <p class="text-base font-medium text-slate-700 student-name">Chandan</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">81</div>
+          <p class="text-base font-medium text-slate-700 student-name">Ronal</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">82</div>
+          <p class="text-base font-medium text-slate-700 student-name">Ezaz Ahmed</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">83</div>
+          <p class="text-base font-medium text-slate-700 student-name">Ripun</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">84</div>
+          <p class="text-base font-medium text-slate-700 student-name">Migom</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">85</div>
+          <p class="text-base font-medium text-slate-700 student-name">Alex</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">86</div>
+          <p class="text-base font-medium text-slate-700 student-name">Alaken</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">87</div>
+          <p class="text-base font-medium text-slate-700 student-name">Pranjal</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">88</div>
+          <p class="text-base font-medium text-slate-700 student-name">Mahabob Hassan</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">89</div>
+          <p class="text-base font-medium text-slate-700 student-name">Himanshu Borah</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">90</div>
+          <p class="text-base font-medium text-slate-700 student-name">Anusika Karmakar</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">91</div>
+          <p class="text-base font-medium text-slate-700 student-name">Purnangini Sulekha Sonowal</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">92</div>
+          <p class="text-base font-medium text-slate-700 student-name">Sania Bora</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">93</div>
+          <p class="text-base font-medium text-slate-700 student-name">Samir alam</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">94</div>
+          <p class="text-base font-medium text-slate-700 student-name">Ritisha Borah</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">95</div>
+          <p class="text-base font-medium text-slate-700 student-name">Mrigendra kalita</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">96</div>
+          <p class="text-base font-medium text-slate-700 student-name">Manjil Agamacharyya</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">97</div>
+          <p class="text-base font-medium text-slate-700 student-name">Parthajit Das</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">98</div>
+          <p class="text-base font-medium text-slate-700 student-name">Kirti</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">99</div>
+          <p class="text-base font-medium text-slate-700 student-name">Adrija Batswa</p>
+        </div>
+        <div class="student-item flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100 animate-fadeInUp">
+          <div class="w-8 h-8 flex-shrink-0 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold text-sm mr-4">100</div>
+          <p class="text-base font-medium text-slate-700 student-name">Kajori</p>
+        </div>
+        
+        <p id="noResults" class="hidden text-center text-slate-500 py-4">
+          No students found.
+        </p>
+
+      </div>
+    </div>
 
   </div>
 
-  <script>
-    // --- TIMER SCRIPT --- (No changes to logic)
 
-    const deadline = new Date("2025-11-04T03:59:59");
+  <script>
+    // --- TIMER SCRIPT --- (No changes to this logic)
+
+    const deadline = new Date("2025-11-04T01:00:59"); // Set your deadline
     const daysEl = document.getElementById('days');
     const hoursEl = document.getElementById('hours');
     const minutesEl = document.getElementById('minutes');
@@ -110,7 +625,7 @@
         clearInterval(timer);
         countdownEl.classList.add('hidden');
         reportReadyEl.classList.remove('hidden');
-        reportReadyEl.style.opacity = '1'; 
+        reportReadyEl.style.opacity = '1';  
         return;
       }
 
@@ -126,7 +641,111 @@
     }
 
     const timer = setInterval(updateCountdown, 1000);
-    updateCountdown(); 
+    updateCountdown();  
+
+    // --- NEW SCRIPT FOR BUTTON, ANIMATION, AND SEARCH ---
+
+    const mainCardEl = document.getElementById('mainCard');
+    const openReportBtn = document.getElementById('openReportBtn');
+    const accomplishmentScreenEl = document.getElementById('accomplishmentScreen');
+    const casinoDigitEl = document.getElementById('casinoDigit');
+    const topPerformerListEl = document.getElementById('topPerformerList');
+    const eligibleIndividualsListEl = document.getElementById('eligibleIndividualsList');
+    
+    // Search bar elements
+    const searchBar = document.getElementById('searchBar');
+    const studentListContainer = document.getElementById('studentListContainer');
+    const studentItems = studentListContainer.querySelectorAll('.student-item');
+    const noResultsEl = document.getElementById('noResults');
+
+    // Handle the button click
+    openReportBtn.addEventListener('click', () => {
+      mainCardEl.classList.add('hidden'); 
+      accomplishmentScreenEl.classList.remove('hidden'); 
+      accomplishmentScreenEl.classList.add('animate-slideUpIn'); 
+      
+      setTimeout(() => {
+        startCasinoAnimation(); 
+      }, 500); // Start casino slightly after slide-in begins
+    });
+
+    // Function to launch confetti
+    function launchConfetti() {
+      confetti({
+        particleCount: 200, 
+        spread: 100,
+        origin: { y: 0.6 }
+      });
+    }
+
+    // Function to run the casino animation and show student lists
+    function startCasinoAnimation() {
+      let casinoInterval;
+      const numbersToCycle = ['3', '2', '1'];
+      let currentIndex = 0;
+
+      casinoInterval = setInterval(() => {
+        currentIndex = (currentIndex + 1) % numbersToCycle.length;
+        casinoDigitEl.textContent = numbersToCycle[currentIndex];
+      }, 100); 
+
+      setTimeout(() => {
+        clearInterval(casinoInterval); 
+        casinoDigitEl.textContent = '1'; 
+        casinoDigitEl.classList.add('animate-landDigit'); 
+        launchConfetti(); 
+
+        // After confetti, reveal the top performers list
+        setTimeout(() => {
+            topPerformerListEl.classList.remove('hidden');
+            const topPerformers = topPerformerListEl.querySelectorAll('.animate-fadeInUp');
+            topPerformers.forEach((item, index) => {
+                item.style.animationDelay = `${index * 0.2}s`;
+            });
+        }, 1000); // 1s after confetti
+
+        // After the top performers list, reveal the eligible individuals list
+        setTimeout(() => {
+            eligibleIndividualsListEl.classList.remove('hidden');
+            const eligibleStudents = eligibleIndividualsListEl.querySelectorAll('.animate-fadeInUp');
+            eligibleStudents.forEach((item, index) => {
+                // Apply a very short, staggered delay for each item
+                item.style.animationDelay = `${index * 0.05}s`; // 0.05s * 100 items = 5s total
+            });
+        }, 1800); // 1.8s after confetti (0.8s after top performers)
+
+      }, 2500); // Run casino animation for 2.5 seconds
+    }
+
+    // --- NEW: Search Bar Filter Function ---
+
+    function filterList() {
+      const searchTerm = searchBar.value.toLowerCase();
+      let itemsFound = false;
+
+      studentItems.forEach(item => {
+        const nameEl = item.querySelector('.student-name');
+        const name = nameEl.textContent.toLowerCase();
+        
+        if (name.includes(searchTerm)) {
+          item.style.display = 'flex'; // Use 'flex' as items are flex containers
+          itemsFound = true;
+        } else {
+          item.style.display = 'none'; // Hide it
+        }
+      });
+
+      // Show or hide the "No results" message
+      if (itemsFound) {
+        noResultsEl.classList.add('hidden');
+      } else {
+        noResultsEl.classList.remove('hidden');
+      }
+    }
+
+    // Attach the event listener to the search bar
+    searchBar.addEventListener('input', filterList);
+
   </script>
 
 </body>
