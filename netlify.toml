@@ -1,4 +1,5 @@
 [[headers]]
   for = "/*"
+
   [headers.values]
-    Content-Security-Policy = "frame-ancestors 'self' https://ezee.hashnode.dev https://*.hashnode.dev https://hashnode.com https://*.hashnode.com"
+    Content-Security-Policy = "frame-ancestors https:"
